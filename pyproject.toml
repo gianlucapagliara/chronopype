@@ -1,0 +1,67 @@
+[tool.poetry]
+name = "flowtime"
+version = "0.1.0"
+description = "A flexible clock implementation for real-time and backtesting scenarios"
+authors = ["Gianluca Pagliara <pagliara.gianluca@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-cov = "^4.1.0"
+black = "^23.11.0"
+isort = "^5.12.0"
+mypy = "^1.7.0"
+safety = "^2.3.5"
+pre-commit = "^3.5.0"
+ruff = "^0.8.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+strict = true
+disallow_untyped_decorators = false
+ignore_missing_imports = true
+disable_error_code = ["misc"]
+exclude = ["tests/.*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP"   # pyupgrade
+]
+ignore = [
+    "E203",  # See https://github.com/psf/black/issues/315
+    "E501"   # Line too long (handled by black)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Ignore unused imports in __init__ files
