@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from flowtime.processors.network import NetworkProcessor, NetworkStatus
+from chronopype.processors.network import NetworkProcessor, NetworkStatus
 
 
 class MockNetworkProcessor(NetworkProcessor):

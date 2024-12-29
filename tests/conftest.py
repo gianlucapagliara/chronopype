@@ -4,11 +4,11 @@ from collections.abc import Callable
 
 import pytest
 
-from flowtime.clocks.backtest import BacktestClock
-from flowtime.clocks.modes import ClockMode
-from flowtime.clocks.realtime import RealtimeClock
-from flowtime.models import ClockConfig
-from flowtime.processors.base import TickProcessor
+from chronopype.clocks.backtest import BacktestClock
+from chronopype.clocks.modes import ClockMode
+from chronopype.clocks.realtime import RealtimeClock
+from chronopype.models import ClockConfig
+from chronopype.processors.base import TickProcessor
 
 
 class MockProcessor(TickProcessor):

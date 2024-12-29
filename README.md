@@ -1,10 +1,10 @@
-# FlowTime
+# Chrono Pypeline
 
-[![CI](https://github.com/gianlucapagliara/flowtime/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucapagliara/flowtime/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/gianlucapagliara/flowtime/branch/main/graph/badge.svg)](https://codecov.io/gh/gianlucapagliara/flowtime)
+[![CI](https://github.com/gianlucapagliara/chronopype/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucapagliara/chronopype/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/gianlucapagliara/chronopype/branch/main/graph/badge.svg)](https://codecov.io/gh/gianlucapagliara/chronopype)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 
-A flexible clock implementation for real-time and backtesting scenarios in Python. FlowTime provides a robust framework for managing time-based operations with support for both real-time processing and historical data backtesting.
+A flexible clock implementation for real-time and backtesting scenarios in Python. chronopype provides a robust framework for managing time-based operations with support for both real-time processing and historical data backtesting.
 
 ## Features
 
@@ -21,21 +21,21 @@ A flexible clock implementation for real-time and backtesting scenarios in Pytho
 
 ```bash
 # Using pip
-pip install flowtime
+pip install chronopype
 
 # Using poetry
-poetry add flowtime
+poetry add chronopype
 ```
 
 ## Quick Start
 
-Here's a simple example of using FlowTime:
+Here's a simple example of using chronopype:
 
 ```python
 import asyncio
-from flowtime import ClockConfig
-from flowtime.clocks import RealtimeClock
-from flowtime.processors import TickProcessor
+from chronopype import ClockConfig
+from chronopype.clocks import RealtimeClock
+from chronopype.processors import TickProcessor
 
 class MyProcessor(TickProcessor):
     async def async_tick(self, timestamp: float) -> None:
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
 ## Development
 
-FlowTime uses Poetry for dependency management and packaging:
+chronopype uses Poetry for dependency management and packaging:
 
 ```bash
 # Install dependencies
@@ -88,6 +88,3 @@ poetry run mypy .
 poetry run pre-commit run --all-files
 ```
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

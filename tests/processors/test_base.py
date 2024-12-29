@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from flowtime.clocks.base import BaseClock
-from flowtime.exceptions import ClockError
+from chronopype.clocks.base import BaseClock
+from chronopype.exceptions import ClockError
 from tests.conftest import MockProcessor
 
 

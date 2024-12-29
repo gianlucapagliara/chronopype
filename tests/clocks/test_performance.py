@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from flowtime.clocks.base import BaseClock
+from chronopype.clocks.base import BaseClock
 from tests.conftest import MockProcessor
 
 

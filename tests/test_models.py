@@ -3,8 +3,8 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from flowtime.clocks.modes import ClockMode
-from flowtime.models import ClockConfig, ProcessorState
+from chronopype.clocks.modes import ClockMode
+from chronopype.models import ClockConfig, ProcessorState
 
 
 def test_clock_config_validation() -> None:

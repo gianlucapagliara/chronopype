@@ -3,8 +3,8 @@ import time
 
 import pytest
 
-from flowtime.clocks.realtime import RealtimeClock
-from flowtime.models import ClockConfig
+from chronopype.clocks.realtime import RealtimeClock
+from chronopype.models import ClockConfig
 from tests.conftest import MockProcessor
 
 

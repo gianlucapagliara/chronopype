@@ -3,9 +3,9 @@ from typing import Any
 
 import pytest
 
-from flowtime.clocks.base import BaseClock
-from flowtime.clocks.modes import ClockMode
-from flowtime.exceptions import ClockContextError
+from chronopype.clocks.base import BaseClock
+from chronopype.clocks.modes import ClockMode
+from chronopype.exceptions import ClockContextError
 from tests.conftest import MockProcessor
 
 

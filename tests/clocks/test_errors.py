@@ -2,9 +2,9 @@ from collections.abc import Callable
 
 import pytest
 
-from flowtime.clocks.base import BaseClock
-from flowtime.exceptions import ProcessorTimeoutError
-from flowtime.processors.base import TickProcessor
+from chronopype.clocks.base import BaseClock
+from chronopype.exceptions import ProcessorTimeoutError
+from chronopype.processors.base import TickProcessor
 from tests.conftest import MockProcessor
 
 

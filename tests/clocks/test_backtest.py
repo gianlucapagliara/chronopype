@@ -1,8 +1,8 @@
 import pytest
 
-from flowtime.clocks.backtest import BacktestClock
-from flowtime.exceptions import ClockError
-from flowtime.models import ClockConfig
+from chronopype.clocks.backtest import BacktestClock
+from chronopype.exceptions import ClockError
+from chronopype.models import ClockConfig
 from tests.conftest import MockProcessor
 
 
