@@ -107,7 +107,7 @@ def error_list() -> list[tuple[TickProcessor, Exception]]:
 
 @pytest.fixture
 def error_callback(
-    error_list: list[tuple[TickProcessor, Exception]]
+    error_list: list[tuple[TickProcessor, Exception]],
 ) -> Callable[[TickProcessor, Exception], None]:
     """Create an error callback that collects errors in a list."""
 

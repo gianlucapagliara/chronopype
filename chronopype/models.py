@@ -126,40 +126,46 @@ class ProcessorState(BaseModel):
         execution_times.append(execution_time)
 
         # Reset error tracking on successful execution
-        return self.model_copy(
-            update={
-                "execution_times": execution_times,
-                "consecutive_errors": 0,
-                "last_success_time": datetime.now(),
-            }
+        return ProcessorState(
+            **self.model_copy(
+                update={
+                    "execution_times": execution_times,
+                    "consecutive_errors": 0,
+                    "last_success_time": datetime.now(),
+                }
+            ).model_dump()
         )
 
     def record_error(self, error: Exception, timestamp: float) -> "ProcessorState":
         """Record an error occurrence."""
         now = datetime.fromtimestamp(timestamp)
-        return self.model_copy(
-            update={
-                "error_count": self.error_count + 1,
-                "consecutive_errors": self.consecutive_errors + 1,
-                "last_error": str(error),
-                "last_error_time": now,
-            }
+        return ProcessorState(
+            **self.model_copy(
+                update={
+                    "error_count": self.error_count + 1,
+                    "consecutive_errors": self.consecutive_errors + 1,
+                    "last_error": str(error),
+                    "last_error_time": now,
+                }
+            ).model_dump()
         )
 
     def update_retry_count(self, retry_count: int) -> "ProcessorState":
         """Update retry count and track maximum consecutive retries."""
-        return self.model_copy(
-            update={
-                "retry_count": retry_count,
-                "max_consecutive_retries": max(
-                    self.max_consecutive_retries, retry_count
-                ),
-            }
+        return ProcessorState(
+            **self.model_copy(
+                update={
+                    "retry_count": retry_count,
+                    "max_consecutive_retries": max(
+                        self.max_consecutive_retries, retry_count
+                    ),
+                }
+            ).model_dump()
         )
 
     def reset_retries(self) -> "ProcessorState":
         """Reset retry count after successful execution."""
-        return self.model_copy(update={"retry_count": 0})
+        return ProcessorState(**self.model_copy(update={"retry_count": 0}).model_dump())
 
 
 class ClockConfig(BaseModel):

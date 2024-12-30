@@ -47,12 +47,12 @@ async def main():
         start_time=time.time(),
         tick_size=1.0  # 1 second ticks
     )
-    
+
     # Create and configure the clock
     async with RealtimeClock(config) as clock:
         # Add your processor
         clock.add_processor(MyProcessor())
-        
+
         # Run for 10 seconds
         await clock.run_til(config.start_time + 10)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 - **Clocks**: Base implementations for time management
   - `RealtimeClock`: For real-time processing
   - `BacktestClock`: For historical data processing
-  
+
 - **Processors**: Framework for implementing time-based operations
   - `TickProcessor`: Base class for all processors
   - `NetworkProcessor`: Network-aware processor with retry capabilities
@@ -87,4 +87,3 @@ poetry run mypy .
 # Run linting
 poetry run pre-commit run --all-files
 ```
-

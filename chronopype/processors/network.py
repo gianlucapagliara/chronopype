@@ -91,67 +91,88 @@ class NetworkProcessor(TickProcessor):
         """Override this method to implement network status checking"""
         raise NotImplementedError("check_network() has not been implemented!")
 
+    async def _perform_network_check(self) -> tuple[NetworkStatus, bool, int, float]:
+        start_time = time.time()
+        retry_count = 0
+        has_unexpected_error = False
+
+        try:
+            # Update status to show we're checking
+            if self._network_status is NetworkStatus.NOT_CONNECTED:
+                self._network_status = NetworkStatus.CONNECTING
+
+            new_status = await asyncio.wait_for(
+                self.check_network(), timeout=self._check_network_timeout
+            )
+            execution_time = time.time() - start_time
+            self.record_execution(execution_time)
+
+        except asyncio.CancelledError:
+            raise
+        except TimeoutError:
+            self.logger().warning(
+                "Check network call has timed out. Network status is not connected."
+            )
+            new_status = NetworkStatus.NOT_CONNECTED
+            self.record_error(TimeoutError("Network check timed out"), time.time())
+            retry_count = 1
+        except Exception as e:
+            self.logger().error(
+                "Unexpected error while checking network status.", exc_info=True
+            )
+            new_status = NetworkStatus.ERROR
+            has_unexpected_error = True
+            self.record_error(e, time.time())
+            retry_count = 1
+
+        return new_status, has_unexpected_error, retry_count, time.time() - start_time
+
+    async def _handle_status_transition(
+        self, new_status: NetworkStatus, last_status: NetworkStatus
+    ) -> None:
+        if new_status != last_status:
+            if new_status is NetworkStatus.CONNECTED:
+                self._network_status = NetworkStatus.CONNECTED
+                self.on_connected()
+                await self.start_network()
+            elif last_status is NetworkStatus.CONNECTED:
+                self._network_status = NetworkStatus.DISCONNECTING
+                self.on_disconnected()
+                await self.stop_network()
+                self._network_status = new_status
+
+    def _calculate_wait_time(
+        self, has_unexpected_error: bool, retry_count: int
+    ) -> float:
+        if has_unexpected_error:
+            return self._network_error_wait_time
+        elif retry_count > 0:
+            return self._calculate_backoff(retry_count)
+        return self._check_network_interval
+
     async def _check_network_loop(self) -> None:
         retry_count = 0
         while True:
-            start_time = time.time()
             last_status = self._network_status
-            has_unexpected_error = False
 
-            try:
-                # Update status to show we're checking
-                if self._network_status is NetworkStatus.NOT_CONNECTED:
-                    self._network_status = NetworkStatus.CONNECTING
+            (
+                new_status,
+                has_unexpected_error,
+                new_retries,
+                execution_time,
+            ) = await self._perform_network_check()
 
-                new_status = await asyncio.wait_for(
-                    self.check_network(), timeout=self._check_network_timeout
-                )
-                execution_time = time.time() - start_time
-                self.record_execution(execution_time)
-                retry_count = 0  # Reset retry count on success
-
-            except asyncio.CancelledError:
-                raise
-            except TimeoutError:
-                self.logger().warning(
-                    "Check network call has timed out. Network status is not connected."
-                )
-                new_status = NetworkStatus.NOT_CONNECTED
-                self.record_error(TimeoutError("Network check timed out"), time.time())
-                retry_count += 1
-            except Exception as e:
-                self.logger().error(
-                    "Unexpected error while checking network status.", exc_info=True
-                )
-                new_status = NetworkStatus.ERROR
-                has_unexpected_error = True
-                self.record_error(e, time.time())
-                retry_count += 1
-
-            # Update state with retry information
+            retry_count = (
+                0
+                if new_status is NetworkStatus.CONNECTED
+                else retry_count + new_retries
+            )
             self._state = self._state.update_retry_count(retry_count)
 
-            # Handle status transition
-            if new_status != last_status:
-                if new_status is NetworkStatus.CONNECTED:
-                    self._network_status = NetworkStatus.CONNECTED
-                    self.on_connected()
-                    await self.start_network()
-                elif last_status is NetworkStatus.CONNECTED:
-                    self._network_status = NetworkStatus.DISCONNECTING
-                    self.on_disconnected()
-                    await self.stop_network()
-                    self._network_status = new_status
+            await self._handle_status_transition(new_status, last_status)
 
-            # Calculate wait time based on status and errors
-            if has_unexpected_error:
-                wait_time = self._network_error_wait_time
-            elif retry_count > 0:
-                wait_time = self._calculate_backoff(retry_count)
-            else:
-                wait_time = self._check_network_interval
-
-            await asyncio.sleep(wait_time)
+            wait_time = self._calculate_wait_time(has_unexpected_error, retry_count)
+            await asyncio.sleep(max(0.0, wait_time - execution_time))
 
     def start(self, timestamp: float) -> None:
         super().start(timestamp)
