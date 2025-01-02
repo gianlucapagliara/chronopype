@@ -11,6 +11,10 @@ from .modes import ClockMode
 class BacktestClock(BaseClock):
     """Clock implementation for backtesting mode."""
 
+    start_publication = BaseClock.start_publication
+    tick_publication = BaseClock.tick_publication
+    stop_publication = BaseClock.stop_publication
+
     def __init__(
         self,
         config: ClockConfig,

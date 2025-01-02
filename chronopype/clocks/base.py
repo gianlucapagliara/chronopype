@@ -2,12 +2,40 @@ import asyncio
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, Protocol
+
+from eventspype.publishers.multi import MultiPublisher
+from eventspype.publishers.publications import EventPublication
 
 from ..exceptions import ClockContextError, ClockError, ProcessorTimeoutError
 from ..models import ClockConfig, ProcessorState
 from ..processors.base import TickProcessor
 from .modes import ClockMode
+
+
+@dataclass
+class ClockStartEvent:
+    """Event emitted when the clock starts."""
+    timestamp: float
+    mode: ClockMode
+    tick_size: float
+
+
+@dataclass
+class ClockTickEvent:
+    """Event emitted on each clock tick."""
+    timestamp: float
+    tick_counter: int
+    processors: list[TickProcessor]
+
+
+@dataclass
+class ClockStopEvent:
+    """Event emitted when the clock stops."""
+    timestamp: float
+    total_ticks: int
+    final_states: dict[TickProcessor, ProcessorState]
 
 
 class AsyncContextManager(Protocol):
@@ -20,8 +48,12 @@ class AsyncContextManager(Protocol):
     ) -> None: ...
 
 
-class BaseClock(AsyncContextManager, ABC):
+class BaseClock(AsyncContextManager, MultiPublisher, ABC):
     """Base abstract class for Clock implementations."""
+
+    start_publication = EventPublication(event_class=ClockStartEvent, event_tag="clock_start")
+    tick_publication = EventPublication(event_class=ClockTickEvent, event_tag="clock_tick")
+    stop_publication = EventPublication(event_class=ClockStopEvent, event_tag="clock_stop")
 
     def __init__(
         self,
@@ -29,6 +61,8 @@ class BaseClock(AsyncContextManager, ABC):
         error_callback: Callable[[TickProcessor, Exception], None] | None = None,
     ) -> None:
         """Initialize a new Clock instance."""
+        MultiPublisher.__init__(self)  # Initialize MultiPublisher
+
         self._config = config
         self._tick_counter = 0
         self._current_tick = (
@@ -156,6 +190,16 @@ class BaseClock(AsyncContextManager, ABC):
                 except Exception:
                     pass  # Ignore errors during cleanup
 
+        # Emit stop event
+        self.trigger_event(
+            self.stop_publication,
+            ClockStopEvent(
+                timestamp=self._current_tick,
+                total_ticks=self._tick_counter,
+                final_states=self.processor_states,
+            ),
+        )
+
     def add_processor(self, processor: TickProcessor) -> None:
         """Add a processor to the clock."""
         if processor in self._processors:
@@ -278,6 +322,17 @@ class BaseClock(AsyncContextManager, ABC):
                         "max_consecutive_retries": max_consecutive_retries,
                     }
                 )
+
+                # Emit tick event after successful execution
+                self.trigger_event(
+                    self.tick_publication,
+                    ClockTickEvent(
+                        timestamp=timestamp,
+                        tick_counter=self._tick_counter,
+                        processors=self.get_active_processors(),
+                    ),
+                )
+
                 return
 
             except ProcessorTimeoutError:
@@ -348,13 +403,22 @@ class BaseClock(AsyncContextManager, ABC):
                 else (time.time() // self._config.tick_size) * self._config.tick_size
             )
 
+            # Emit clock start event
+            self.trigger_event(
+                self.start_publication,
+                ClockStartEvent(
+                    timestamp=self._current_tick,
+                    mode=self._config.clock_mode,
+                    tick_size=self._config.tick_size,
+                ),
+            )
+
             # Add all registered processors to the context
             for processor in self._processors:
                 try:
                     self._current_context.append(processor)
                     processor.start(self._current_tick)
                     state = self._processor_states.get(processor, ProcessorState())
-                    # Preserve error information when initializing
                     self._processor_states[processor] = state.model_copy(
                         update={
                             "is_active": True,
