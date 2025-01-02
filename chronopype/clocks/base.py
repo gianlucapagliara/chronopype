@@ -17,6 +17,7 @@ from .modes import ClockMode
 @dataclass
 class ClockStartEvent:
     """Event emitted when the clock starts."""
+
     timestamp: float
     mode: ClockMode
     tick_size: float
@@ -25,6 +26,7 @@ class ClockStartEvent:
 @dataclass
 class ClockTickEvent:
     """Event emitted on each clock tick."""
+
     timestamp: float
     tick_counter: int
     processors: list[TickProcessor]
@@ -33,6 +35,7 @@ class ClockTickEvent:
 @dataclass
 class ClockStopEvent:
     """Event emitted when the clock stops."""
+
     timestamp: float
     total_ticks: int
     final_states: dict[TickProcessor, ProcessorState]
@@ -51,9 +54,15 @@ class AsyncContextManager(Protocol):
 class BaseClock(AsyncContextManager, MultiPublisher, ABC):
     """Base abstract class for Clock implementations."""
 
-    start_publication = EventPublication(event_class=ClockStartEvent, event_tag="clock_start")
-    tick_publication = EventPublication(event_class=ClockTickEvent, event_tag="clock_tick")
-    stop_publication = EventPublication(event_class=ClockStopEvent, event_tag="clock_stop")
+    start_publication = EventPublication(
+        event_class=ClockStartEvent, event_tag="clock_start"
+    )
+    tick_publication = EventPublication(
+        event_class=ClockTickEvent, event_tag="clock_tick"
+    )
+    stop_publication = EventPublication(
+        event_class=ClockStopEvent, event_tag="clock_stop"
+    )
 
     def __init__(
         self,
