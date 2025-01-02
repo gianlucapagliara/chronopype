@@ -1,8 +1,8 @@
 import pytest
 
 from chronopype.clocks.backtest import BacktestClock
+from chronopype.clocks.config import ClockConfig
 from chronopype.exceptions import ClockError
-from chronopype.models import ClockConfig
 from tests.conftest import MockProcessor
 
 

@@ -4,7 +4,7 @@ import time
 from abc import abstractmethod
 from enum import Enum
 
-from .base import TickProcessor
+from chronopype.processors.base import TickProcessor
 
 
 class NetworkStatus(Enum):

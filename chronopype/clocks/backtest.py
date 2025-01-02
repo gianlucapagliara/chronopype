@@ -1,11 +1,11 @@
 import asyncio
 from collections.abc import Callable
 
-from ..exceptions import ClockError
-from ..models import ClockConfig
-from ..processors.base import TickProcessor
-from .base import BaseClock
-from .modes import ClockMode
+from chronopype.clocks.base import BaseClock
+from chronopype.clocks.config import ClockConfig
+from chronopype.clocks.modes import ClockMode
+from chronopype.exceptions import ClockError
+from chronopype.processors.base import TickProcessor
 
 
 class BacktestClock(BaseClock):

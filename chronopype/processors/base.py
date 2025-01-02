@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..models import ProcessorState
+from chronopype.processors.models import ProcessorState
 
 
 class TickProcessor(ABC):

@@ -5,9 +5,9 @@ from collections.abc import Callable
 import pytest
 
 from chronopype.clocks.backtest import BacktestClock
+from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.clocks.realtime import RealtimeClock
-from chronopype.models import ClockConfig
 from chronopype.processors.base import TickProcessor
 
 

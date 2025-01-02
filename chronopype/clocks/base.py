@@ -8,10 +8,11 @@ from typing import Any, Protocol
 from eventspype.publishers.multi import MultiPublisher
 from eventspype.publishers.publications import EventPublication
 
-from ..exceptions import ClockContextError, ClockError, ProcessorTimeoutError
-from ..models import ClockConfig, ProcessorState
-from ..processors.base import TickProcessor
-from .modes import ClockMode
+from chronopype.clocks.config import ClockConfig
+from chronopype.clocks.modes import ClockMode
+from chronopype.exceptions import ClockContextError, ClockError, ProcessorTimeoutError
+from chronopype.processors.base import TickProcessor
+from chronopype.processors.models import ProcessorState
 
 
 @dataclass
