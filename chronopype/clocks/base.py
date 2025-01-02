@@ -5,8 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from eventspype.publishers.multi import MultiPublisher
-from eventspype.publishers.publications import EventPublication
+from eventspype.pub.multipublisher import MultiPublisher
+from eventspype.pub.publication import EventPublication
 
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode

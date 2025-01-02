@@ -321,13 +321,13 @@ poetry = ["poetry"]
 
 [[package]]
 name = "eventspype"
-version = "0.1.0"
+version = "1.0.0"
 description = "A Python framework for building event-driven applications with a clean publisher-subscriber pattern implementation."
 optional = false
 python-versions = "<4.0,>=3.13"
 files = [
-    {file = "eventspype-0.1.0-py3-none-any.whl", hash = "sha256:0d5504cd9f1a038cd9bdc6a9aced7207fa2d30582fa5768330c0ee3b4fba55a6"},
-    {file = "eventspype-0.1.0.tar.gz", hash = "sha256:451de16d779ba12de425f7fe3bfb00f8b10d2eec9080a7f310d0d9e53447d8b0"},
+    {file = "eventspype-1.0.0-py3-none-any.whl", hash = "sha256:d89035f576f66bef06630405301cb9cb9673c25dcb12e10a3ed93d600505aa53"},
+    {file = "eventspype-1.0.0.tar.gz", hash = "sha256:2bb5f50babc82746185887cb07185c30ab350f32247b1978521e55078eac421f"},
 ]
 
 [package.dependencies]
@@ -1070,4 +1070,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "4813b973fa45d9da71cc520733e402d3ce0a1b0d5fd116b2a12748bfb122b3f3"
+content-hash = "1e9909a5b93fe3b572badbbb49509f33b54b0c1ca30dc66058ace2de4e9b0365"
