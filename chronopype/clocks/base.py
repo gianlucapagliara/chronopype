@@ -201,7 +201,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     pass  # Ignore errors during cleanup
 
         # Emit stop event
-        self.trigger_event(
+        self.publish(
             self.stop_publication,
             ClockStopEvent(
                 timestamp=self._current_tick,
@@ -355,7 +355,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 )
 
                 # Emit tick event after successful execution
-                self.trigger_event(
+                self.publish(
                     self.tick_publication,
                     ClockTickEvent(
                         timestamp=timestamp,
@@ -435,7 +435,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             )
 
             # Emit clock start event
-            self.trigger_event(
+            self.publish(
                 self.start_publication,
                 ClockStartEvent(
                     timestamp=self._current_tick,
