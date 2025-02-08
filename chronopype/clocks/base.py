@@ -218,7 +218,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         self._processors.append(processor)
         self._processor_states[processor] = ProcessorState(
             last_timestamp=self._current_tick,
-            is_active=False,
+            is_active=self._started,  # Set active if clock is started
             retry_count=0,
             max_consecutive_retries=0,
             execution_times=[],
@@ -229,10 +229,31 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             last_success_time=None,
         )
 
+        # If clock is already started, initialize the processor
+        if self._started:
+            try:
+                processor.start(self._current_tick)
+            except Exception as e:
+                # Clean up if initialization fails
+                self._processors.remove(processor)
+                self._processor_states.pop(processor)
+                raise ClockError(f"Failed to start processor: {str(e)}") from e
+
     def remove_processor(self, processor: TickProcessor) -> None:
         """Remove a processor from the clock."""
         if processor not in self._processors:
             raise ClockError("Processor not registered")
+
+        # Stop the processor if it's active
+        state = self._processor_states[processor]
+        if state.is_active:
+            try:
+                processor.stop()
+            except Exception as e:
+                # Still remove the processor but propagate the error
+                self._processors.remove(processor)
+                self._processor_states.pop(processor, None)
+                raise ClockError(f"Failed to stop processor: {str(e)}") from e
 
         self._processors.remove(processor)
         self._processor_states.pop(processor, None)
