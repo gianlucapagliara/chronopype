@@ -1,10 +1,9 @@
-from abc import ABC, abstractmethod
 from typing import Any
 
 from chronopype.processors.models import ProcessorState
 
 
-class TickProcessor(ABC):
+class TickProcessor:
     """Base class for tick processors."""
 
     def __init__(self, stats_window_size: int = 100) -> None:
@@ -15,6 +14,11 @@ class TickProcessor(ABC):
     def state(self) -> ProcessorState:
         """Current state of the processor."""
         return self._state
+
+    @property
+    def current_timestamp(self) -> float:
+        """Current timestamp of the processor."""
+        return self._state.last_timestamp or 0
 
     def _update_state(self, **kwargs: Any) -> None:
         """Update the processor state with new values."""
@@ -31,17 +35,14 @@ class TickProcessor(ABC):
         """Record an error occurrence."""
         self._state = self._state.record_error(error, timestamp)
 
-    @abstractmethod
     def start(self, timestamp: float) -> None:
         """Start the processor."""
         self._update_state(last_timestamp=timestamp, is_active=True)
 
-    @abstractmethod
     def tick(self, timestamp: float) -> None:
         """Process a tick."""
         pass
 
-    @abstractmethod
     def stop(self) -> None:
         """Stop the processor."""
         self._update_state(is_active=False)

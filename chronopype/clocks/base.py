@@ -149,21 +149,6 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         )
 
     @abstractmethod
-    def start(self) -> None:
-        """Start the clock."""
-        pass
-
-    @abstractmethod
-    def stop(self) -> None:
-        """Stop the clock."""
-        pass
-
-    @abstractmethod
-    def tick(self) -> None:
-        """Process a clock tick."""
-        pass
-
-    @abstractmethod
     async def run(self) -> None:
         """Run the clock."""
         pass
@@ -425,7 +410,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
         try:
             self._current_context = []
-            self._started = False
+            self._started = True
             self._running = False
             self._tick_counter = 0
             self._current_tick = (

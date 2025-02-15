@@ -27,24 +27,6 @@ class BacktestClock(BaseClock):
             raise ClockError("end_time must be set for backtest mode")
         super().__init__(config, error_callback)
 
-    def start(self) -> None:
-        """Start the clock."""
-        if not self._current_context:
-            raise ClockError("Clock must be started in a context")
-        self._started = True
-
-    def stop(self) -> None:
-        """Stop the clock."""
-        self._started = False
-        self._running = False
-
-    def tick(self) -> None:
-        """Process a clock tick."""
-        if not self._started:
-            raise ClockError("Clock not started")
-        self._tick_counter += 1
-        self._current_tick += self._config.tick_size
-
     async def run(self) -> None:
         """Run the clock until end_time."""
         await self.run_til(self._config.end_time)

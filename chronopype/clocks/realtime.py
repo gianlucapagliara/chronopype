@@ -26,22 +26,6 @@ class RealtimeClock(BaseClock):
             raise ClockError("RealtimeClock requires REALTIME mode")
         super().__init__(config, error_callback)
 
-    def start(self) -> None:
-        """Start the clock."""
-        self._started = True
-
-    def stop(self) -> None:
-        """Stop the clock."""
-        self._started = False
-        self._running = False
-
-    def tick(self) -> None:
-        """Process a clock tick."""
-        if not self._started:
-            raise ClockError("Clock not started")
-        self._tick_counter += 1
-        self._current_tick += self._config.tick_size
-
     async def run(self) -> None:
         """Run the clock indefinitely."""
         try:
