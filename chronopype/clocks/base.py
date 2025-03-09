@@ -339,16 +339,6 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     }
                 )
 
-                # Emit tick event after successful execution
-                self.publish(
-                    self.tick_publication,
-                    ClockTickEvent(
-                        timestamp=timestamp,
-                        tick_counter=self._tick_counter,
-                        processors=self.get_active_processors(),
-                    ),
-                )
-
                 return
 
             except ProcessorTimeoutError:

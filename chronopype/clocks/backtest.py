@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Callable
 
-from chronopype.clocks.base import BaseClock
+from chronopype.clocks.base import BaseClock, ClockTickEvent
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
@@ -67,10 +67,6 @@ class BacktestClock(BaseClock):
         if not self._running:
             raise ClockError("Clock must be started in a context.")
 
-        processors = [p for p in processors if self._processor_states[p].is_active]
-        if not processors:
-            return
-
         # Calculate number of ticks needed
         num_ticks = int((target_time - self._current_tick) / self._config.tick_size)
         if num_ticks <= 0:
@@ -79,19 +75,21 @@ class BacktestClock(BaseClock):
         # Execute ticks
         for _ in range(num_ticks):
             self._current_tick += self._config.tick_size
+            processors = [p for p in processors if self._processor_states[p].is_active]
             await self._execute_tick(processors)
-            self._tick_counter += 1
 
         # Set final timestamp to exactly match target_time
         if (
             abs(self._current_tick - target_time) > 1e-10
         ):  # Handle floating point precision
             self._current_tick = target_time
+            processors = [p for p in processors if self._processor_states[p].is_active]
             await self._execute_tick(processors)
-            self._tick_counter += 1
 
     async def _execute_tick(self, processors: list[TickProcessor]) -> None:
         """Execute a tick for all processors."""
+        self._tick_counter += 1
+
         if self._config.concurrent_processors:
             # Execute processors concurrently
             tasks = []
@@ -117,6 +115,16 @@ class BacktestClock(BaseClock):
                         update={"last_timestamp": self._current_tick}
                     )
 
+            # Emit tick event after all processors have been executed
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
+
             # Raise the first error if any occurred
             if errors:
                 raise errors[0]
@@ -134,6 +142,16 @@ class BacktestClock(BaseClock):
                     if self._error_callback:
                         self._error_callback(processor, e)
                     raise e
+
+            # Emit tick event after all processors have been executed
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
 
     async def fast_forward(self, seconds: float) -> None:
         """Fast forward the clock by a specified number of seconds."""

@@ -2,7 +2,7 @@ import asyncio
 import time
 from collections.abc import Callable
 
-from chronopype.clocks.base import BaseClock
+from chronopype.clocks.base import BaseClock, ClockTickEvent
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
@@ -36,7 +36,6 @@ class RealtimeClock(BaseClock):
             if self._running:
                 self._running = False
                 self._task = None
-                self.stop()
             raise  # Re-raise to ensure proper cancellation
 
     async def run_til(self, target_time: float) -> None:
@@ -75,11 +74,8 @@ class RealtimeClock(BaseClock):
         if not self._running:
             raise ClockError("Clock must be started.")
 
-        processors = [p for p in processors if self._processor_states[p].is_active]
-        if not processors:
-            return
-
         while time.time() < target_time:
+            processors = [p for p in processors if self._processor_states[p].is_active]
             await self._execute_tick(processors)
             await self._wait_next_tick()
 
@@ -110,6 +106,8 @@ class RealtimeClock(BaseClock):
 
     async def _execute_tick(self, processors: list[TickProcessor]) -> None:
         """Execute a tick for all processors."""
+        self._tick_counter += 1
+
         if self._config.concurrent_processors:
             # Execute processors concurrently
             tasks = []
@@ -135,6 +133,16 @@ class RealtimeClock(BaseClock):
                         update={"last_timestamp": self._current_tick}
                     )
 
+            # Emit tick event after all processors have been executed
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
+
             # Raise the first error if any occurred
             if errors:
                 raise errors[0]
@@ -152,3 +160,13 @@ class RealtimeClock(BaseClock):
                     if self._error_callback:
                         self._error_callback(processor, e)
                     raise e
+
+            # Emit tick event after all processors have been executed
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
