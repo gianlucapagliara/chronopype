@@ -201,7 +201,9 @@ class NetworkProcessor(TickProcessor):
 
     def on_disconnected(self) -> None:
         """Override this method to implement logic when the network is disconnected"""
-        pass
+        self.logger().info(
+            f"Network status has changed to {self._network_status}. Stopping networking..."
+        )
 
     async def async_tick(self, timestamp: float) -> None:
         """Override this method to implement asynchronous tick processing"""

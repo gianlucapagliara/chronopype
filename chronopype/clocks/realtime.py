@@ -100,8 +100,7 @@ class RealtimeClock(BaseClock):
             ticks_passed = int((actual_time - next_tick) / self._config.tick_size)
             next_tick += (ticks_passed + 1) * self._config.tick_size
 
-        # Update current tick and return
-        self._current_tick = next_tick
+        self._current_tick = actual_time
         return next_tick
 
     async def _execute_tick(self, processors: list[TickProcessor]) -> None:
