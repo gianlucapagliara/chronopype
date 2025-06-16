@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chronopype"
-version = "0.2.7"
+version = "0.2.9"
 description = "A flexible clock implementation for real-time and backtesting scenarios"
 authors = ["Gianluca Pagliara <pagliara.gianluca@gmail.com>"]
 readme = "README.md"
