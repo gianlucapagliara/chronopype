@@ -172,9 +172,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if not self._running and not self._started:
             return
 
-        logger.info(
-            "Shutting down clock after %d ticks", self._tick_counter
-        )
+        logger.info("Shutting down clock after %d ticks", self._tick_counter)
         self._running = False
         self._started = False
         self._shutdown_event.set()
