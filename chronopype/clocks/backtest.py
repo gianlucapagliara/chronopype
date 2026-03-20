@@ -39,7 +39,7 @@ class BacktestClock(BaseClock):
         if self._task is not None:
             raise ClockError("Clock is already running")
 
-        if not self._current_context:
+        if self._current_context is None:
             raise ClockError("Clock must be started in a context")
 
         if target_time > self._config.end_time:
@@ -113,7 +113,7 @@ class BacktestClock(BaseClock):
             ClockError: If the clock is not in a context, if n < 1, or if
                 advancing n ticks would exceed end_time.
         """
-        if not self._current_context:
+        if self._current_context is None:
             raise ClockError("Clock must be started in a context")
 
         if n < 1:
@@ -149,7 +149,7 @@ class BacktestClock(BaseClock):
             ClockError: If the clock is not in a context, or if target_time
                 exceeds end_time.
         """
-        if not self._current_context:
+        if self._current_context is None:
             raise ClockError("Clock must be started in a context")
 
         if target_time > self._config.end_time + FLOAT_EPSILON:
@@ -178,7 +178,7 @@ class BacktestClock(BaseClock):
 
     async def fast_forward(self, seconds: float) -> None:
         """Fast forward the clock by a specified number of seconds."""
-        if not self._current_context:
+        if self._current_context is None:
             raise ClockError("Fast forward can only be used within a context")
 
         if seconds <= 0:

@@ -46,7 +46,7 @@ class RealtimeClock(BaseClock):
         if self._task is not None:
             raise ClockError("Clock is already running")
 
-        if not self._current_context:
+        if self._current_context is None:
             raise ClockError("Clock must be started in a context")
 
         self._running = True
