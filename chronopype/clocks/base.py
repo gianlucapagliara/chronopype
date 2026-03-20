@@ -606,9 +606,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
             self._cleanup(error_occurred=error_occurred)
 
-    def get_processor_stats(
-        self, processor: TickProcessor
-    ) -> ProcessorStats | None:
+    def get_processor_stats(self, processor: TickProcessor) -> ProcessorStats | None:
         """Get detailed statistics for a processor.
 
         Returns None if the processor is not registered.
