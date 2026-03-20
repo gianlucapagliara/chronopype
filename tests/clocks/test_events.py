@@ -228,3 +228,75 @@ class TestEventOrdering:
             await clock.run_til(clock.start_time + 2)
 
         assert order == ["start", "tick", "tick", "stop"]
+
+
+class TestTickEventOnError:
+    """Tick event should be published even when a processor fails."""
+
+    async def test_tick_event_published_on_sequential_error(self) -> None:
+        config = ClockConfig(
+            clock_mode=ClockMode.BACKTEST,
+            tick_size=1.0,
+            start_time=1000.0,
+            end_time=1010.0,
+            processor_timeout=0.5,
+            max_retries=0,
+            stats_window_size=10,
+        )
+        clock = BacktestClock(config)
+        proc = MockProcessor("failing")
+        proc.should_raise = True
+        clock.add_processor(proc)
+
+        tick_events: list[ClockTickEvent] = []
+        errors: list[tuple] = []
+
+        clock.add_subscriber_with_callback(
+            clock.tick_publication,
+            lambda e: tick_events.append(e),
+            with_event_info=False,
+        )
+
+        async with clock:
+            try:
+                await clock.step(1)
+            except ValueError:
+                errors.append(("caught",))
+
+        # Tick event should still have been published despite the error
+        assert len(errors) == 1
+        assert len(tick_events) == 1
+
+    async def test_tick_event_published_on_concurrent_error(self) -> None:
+        config = ClockConfig(
+            clock_mode=ClockMode.BACKTEST,
+            tick_size=1.0,
+            start_time=1000.0,
+            end_time=1010.0,
+            processor_timeout=0.5,
+            max_retries=0,
+            stats_window_size=10,
+            concurrent_processors=True,
+        )
+        clock = BacktestClock(config)
+        proc = MockProcessor("failing")
+        proc.should_raise = True
+        clock.add_processor(proc)
+
+        tick_events: list[ClockTickEvent] = []
+        errors: list[tuple] = []
+
+        clock.add_subscriber_with_callback(
+            clock.tick_publication,
+            lambda e: tick_events.append(e),
+            with_event_info=False,
+        )
+
+        async with clock:
+            try:
+                await clock.step(1)
+            except ValueError:
+                errors.append(("caught",))
+
+        assert len(errors) == 1
+        assert len(tick_events) == 1

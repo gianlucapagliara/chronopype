@@ -46,6 +46,9 @@ class RealtimeClock(BaseClock):
         if self._task is not None:
             raise ClockError("Clock is already running")
 
+        if not self._current_context:
+            raise ClockError("Clock must be started in a context")
+
         self._running = True
         self._started = True
 
@@ -55,11 +58,11 @@ class RealtimeClock(BaseClock):
         actual_target = current_time + duration
 
         self._task = asyncio.create_task(
-            self._run_til_impl(actual_target, self._processors)
+            self._run_til_impl(actual_target, self._current_context)
         )
 
         # Activate all processors
-        for processor in self._processors:
+        for processor in self._current_context:
             state = self._processor_states[processor]
             self._processor_states[processor] = state.model_copy(
                 update={"is_active": True}

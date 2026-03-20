@@ -480,11 +480,6 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     if self._error_callback:
                         self._error_callback(processor, result)
                     errors.append(result)
-                else:
-                    state = self._processor_states[processor]
-                    self._processor_states[processor] = state.model_copy(
-                        update={"last_timestamp": self._current_tick}
-                    )
 
             self.publish(
                 self.tick_publication,
@@ -498,17 +493,15 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             if errors:
                 raise errors[0]
         else:
+            errors = []
             for processor in processors:
                 try:
                     await self._execute_processor(processor, self._current_tick)
-                    state = self._processor_states[processor]
-                    self._processor_states[processor] = state.model_copy(
-                        update={"last_timestamp": self._current_tick}
-                    )
                 except Exception as e:
                     if self._error_callback:
                         self._error_callback(processor, e)
-                    raise
+                    errors.append(e)
+                    break
 
             self.publish(
                 self.tick_publication,
@@ -518,6 +511,9 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     processors=self.get_active_processors(),
                 ),
             )
+
+            if errors:
+                raise errors[0]
 
     def _cleanup(self, error_occurred: bool = False) -> None:
         """Clean up the clock state.
