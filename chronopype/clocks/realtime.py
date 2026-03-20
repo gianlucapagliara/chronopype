@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from collections.abc import Callable
 
@@ -7,6 +8,8 @@ from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
 from chronopype.processors.base import TickProcessor
+
+logger = logging.getLogger(__name__)
 
 
 class RealtimeClock(BaseClock):
@@ -96,8 +99,13 @@ class RealtimeClock(BaseClock):
         # Account for any drift that occurred during sleep
         actual_time = time.time()
         if actual_time > next_tick:
-            # We've drifted, adjust next_tick to the nearest future tick
             ticks_passed = int((actual_time - next_tick) / self._config.tick_size)
+            if ticks_passed > 0:
+                logger.debug(
+                    "Clock drift detected: skipped %d ticks (drift=%.3fs)",
+                    ticks_passed,
+                    actual_time - next_tick,
+                )
             next_tick += (ticks_passed + 1) * self._config.tick_size
 
         self._current_tick = actual_time

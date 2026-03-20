@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -13,6 +14,8 @@ from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockContextError, ClockError, ProcessorTimeoutError
 from chronopype.processors.base import TickProcessor
 from chronopype.processors.models import ProcessorState
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,6 +75,12 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
     ) -> None:
         """Initialize a new Clock instance."""
         MultiPublisher.__init__(self)  # Initialize MultiPublisher
+        logger.debug(
+            "Initializing %s (mode=%s, tick_size=%s)",
+            type(self).__name__,
+            config.clock_mode.name,
+            config.tick_size,
+        )
 
         self._config = config
         self._tick_counter = 0
@@ -163,6 +172,9 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if not self._running and not self._started:
             return
 
+        logger.info(
+            "Shutting down clock after %d ticks", self._tick_counter
+        )
         self._running = False
         self._started = False
         self._shutdown_event.set()
@@ -200,6 +212,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if processor in self._processors:
             raise ClockError("Processor already registered")
 
+        logger.debug("Adding processor %s", processor)
         self._processors.append(processor)
         self._processor_states[processor] = ProcessorState(
             last_timestamp=self._current_tick,
@@ -228,6 +241,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         """Remove a processor from the clock."""
         if processor not in self._processors:
             raise ClockError("Processor not registered")
+        logger.debug("Removing processor %s", processor)
 
         # Stop the processor if it's active
         state = self._processor_states[processor]
@@ -311,9 +325,14 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                         f"Processor execution timed out after {self._config.processor_timeout}s"
                     )
                     last_error = error
-                    # Don't raise the error immediately, let the retry logic handle it
                     retry_count += 1
                     max_consecutive_retries = max(max_consecutive_retries, retry_count)
+                    logger.warning(
+                        "Processor %s timed out (retry %d/%d)",
+                        processor,
+                        retry_count,
+                        self._config.max_retries,
+                    )
                     if retry_count <= self._config.max_retries:
                         await asyncio.sleep(0.1 * (2 ** (retry_count - 1)))
                         continue
@@ -351,6 +370,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 last_error = e
                 retry_count += 1
                 max_consecutive_retries = max(max_consecutive_retries, retry_count)
+                logger.warning(
+                    "Processor %s error (retry %d/%d): %s",
+                    processor,
+                    retry_count,
+                    self._config.max_retries,
+                    e,
+                )
 
                 if retry_count <= self._config.max_retries:
                     await asyncio.sleep(0.1 * (2 ** (retry_count - 1)))
@@ -358,7 +384,12 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     break
 
         if last_error:
-            # Update processor state with error
+            logger.error(
+                "Processor %s failed after %d retries: %s",
+                processor,
+                retry_count,
+                last_error,
+            )
             self._processor_states[processor] = state.model_copy(
                 update={
                     "error_count": state.error_count + 1,
@@ -466,6 +497,11 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if self._current_context is not None or self._running or self._started:
             raise ClockContextError("Clock is already in a context or running")
 
+        logger.info(
+            "Starting clock context (mode=%s, processors=%d)",
+            self._config.clock_mode.name,
+            len(self._processors),
+        )
         try:
             self._current_context = []
             self._started = True

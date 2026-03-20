@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Callable
 
 from chronopype.clocks.base import BaseClock
@@ -6,6 +7,8 @@ from chronopype.clocks.config import FLOAT_EPSILON, ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
 from chronopype.processors.base import TickProcessor
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestClock(BaseClock):
@@ -71,6 +74,13 @@ class BacktestClock(BaseClock):
         num_ticks = int((target_time - self._current_tick) / self._config.tick_size)
         if num_ticks <= 0:
             return
+
+        logger.debug(
+            "Backtest running %d ticks (%.1f -> %.1f)",
+            num_ticks,
+            self._current_tick,
+            target_time,
+        )
 
         # Execute ticks
         for _ in range(num_ticks):
