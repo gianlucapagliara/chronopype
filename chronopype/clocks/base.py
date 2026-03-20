@@ -321,11 +321,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
                 execution_time = time.perf_counter() - start_time
 
-                # Update execution time stats
-                execution_times = list(state.execution_times)
+                # Update execution time stats with windowed list
+                window = self._config.stats_window_size
+                if len(state.execution_times) >= window:
+                    execution_times = list(state.execution_times[-(window - 1) :])
+                else:
+                    execution_times = list(state.execution_times)
                 execution_times.append(execution_time)
-                if len(execution_times) > self._config.stats_window_size:
-                    execution_times.pop(0)
 
                 # Update processor state after successful execution
                 self._processor_states[processor] = state.model_copy(
