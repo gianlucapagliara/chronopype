@@ -1,6 +1,6 @@
 [project]
 name = "chronopype"
-version = "0.2.9"
+version = "0.3.0"
 description = "A flexible clock implementation for real-time and backtesting scenarios"
 authors = [{ name = "Gianluca Pagliara", email = "pagliara.gianluca@gmail.com" }]
 readme = "README.md"
