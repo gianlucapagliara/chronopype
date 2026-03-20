@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.10.4,<3",
-    "eventspype>=1.0.1,<2",
+    "eventspype>=1.1.0,<2",
 ]
 
 [project.urls]
