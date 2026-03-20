@@ -61,6 +61,14 @@ class TickProcessor:
         """Stop the processor."""
         self._state = self._state.model_copy(update={"is_active": False})
 
+    def pause(self) -> None:
+        """Pause the processor. Override for processors with background tasks."""
+        pass
+
+    def resume(self) -> None:
+        """Resume the processor. Override for processors with background tasks."""
+        pass
+
     async def async_tick(self, timestamp: float) -> None:
         """Async version of tick. Default implementation calls sync tick."""
         self.tick(timestamp)

@@ -188,7 +188,11 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         pass
 
     async def shutdown(self, timeout: float | None = None) -> None:
-        """Shutdown the clock and all processors with a timeout."""
+        """Shutdown the clock and all processors with a timeout.
+
+        Stops all processors, awaits async cleanup (e.g. NetworkProcessor
+        teardown), and emits the stop event.
+        """
         if not self._running and not self._started:
             return
 
@@ -204,16 +208,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             except (asyncio.CancelledError, Exception):
                 pass
 
-        if self._current_context:
-            for processor in self._current_context:
-                try:
-                    processor.stop()
-                    state = self._processor_states[processor]
-                    self._processor_states[processor] = state.model_copy(
-                        update={"is_active": False}
-                    )
-                except Exception:
-                    pass  # Ignore errors during cleanup
+        await self._stop_all_processors()
 
         # Emit stop event
         self.publish(
@@ -224,6 +219,32 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 final_states=self.processor_states,
             ),
         )
+
+    async def _stop_all_processors(self) -> None:
+        """Stop all processors in the current context and await async cleanup."""
+        if not self._current_context:
+            return
+
+        for processor in self._current_context:
+            try:
+                processor.stop()
+                state = self._processor_states[processor]
+                self._processor_states[processor] = state.model_copy(
+                    update={
+                        "is_active": False,
+                        "retry_count": 0,
+                        "consecutive_errors": 0,
+                    }
+                )
+            except Exception:
+                pass  # Best-effort cleanup
+
+        for processor in self._current_context:
+            if hasattr(processor, "await_cleanup"):
+                try:
+                    await processor.await_cleanup()
+                except Exception:
+                    pass
 
     def add_processor(self, processor: TickProcessor) -> None:
         """Add a processor to the clock.
@@ -290,18 +311,28 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         processor._owner_clock = None
 
     def pause_processor(self, processor: TickProcessor) -> None:
-        """Pause a processor."""
+        """Pause a processor.
+
+        Sets the processor as inactive (skipped during ticks) and calls
+        ``processor.pause()`` so that processors with background tasks
+        (e.g. NetworkProcessor) can suspend them.
+        """
         if processor not in self._processor_states:
             raise ClockError("Processor not registered")
 
         state = self._processor_states[processor]
         if state.is_active:
+            processor.pause()
             self._processor_states[processor] = state.model_copy(
                 update={"is_active": False}
             )
 
     def resume_processor(self, processor: TickProcessor) -> None:
-        """Resume a paused processor."""
+        """Resume a paused processor.
+
+        Sets the processor as active and calls ``processor.resume()`` so
+        that processors with background tasks can restart them.
+        """
         if processor not in self._processor_states:
             raise ClockError("Processor not registered")
 
@@ -310,6 +341,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             self._processor_states[processor] = state.model_copy(
                 update={"is_active": True}
             )
+            processor.resume()
 
     def get_processor_state(self, processor: TickProcessor) -> ProcessorState | None:
         """Get the state of a specific processor."""
@@ -587,35 +619,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         try:
             if not error_occurred:
                 await self.shutdown()
+            else:
+                # On error, shutdown wasn't called — stop processors directly
+                await self._stop_all_processors()
         except:
             error_occurred = True
             raise
         finally:
-            # Stop all processors in the context
-            if self._current_context:
-                for processor in self._current_context:
-                    try:
-                        processor.stop()
-                        state = self._processor_states[processor]
-                        # Preserve error information when stopping
-                        self._processor_states[processor] = state.model_copy(
-                            update={
-                                "is_active": False,
-                                "retry_count": 0,
-                                "consecutive_errors": 0,
-                            }
-                        )
-                    except Exception:
-                        error_occurred = True
-
-                # Await cleanup for processors that need async teardown
-                for processor in self._current_context:
-                    if hasattr(processor, "await_cleanup"):
-                        try:
-                            await processor.await_cleanup()
-                        except Exception:
-                            pass
-
             self._cleanup(error_occurred=error_occurred)
 
     def get_processor_stats(self, processor: TickProcessor) -> ProcessorStats | None:

@@ -180,6 +180,17 @@ class NetworkProcessor(TickProcessor):
         self._check_network_task = asyncio.create_task(self._check_network_loop())
         self._network_status = NetworkStatus.NOT_CONNECTED
 
+    def pause(self) -> None:
+        """Pause the network processor: cancel the background check loop."""
+        if self._check_network_task is not None:
+            self._check_network_task.cancel()
+            self._check_network_task = None
+
+    def resume(self) -> None:
+        """Resume the network processor: restart the background check loop."""
+        if self._check_network_task is None and self.state.is_active:
+            self._check_network_task = asyncio.create_task(self._check_network_loop())
+
     def stop(self) -> None:
         if self._check_network_task is not None:
             self._check_network_task.cancel()

@@ -199,3 +199,64 @@ async def test_async_tick_propagates_errors() -> None:
 
     # Error is NOT recorded by the processor — the clock is responsible for that
     assert proc.state.error_count == 0
+
+
+# --- base.py pause/resume ---
+
+
+def test_tick_processor_pause_noop() -> None:
+    """Base TickProcessor.pause() is a no-op."""
+    proc = TickProcessor()
+    proc.pause()  # Should not raise
+
+
+def test_tick_processor_resume_noop() -> None:
+    """Base TickProcessor.resume() is a no-op."""
+    proc = TickProcessor()
+    proc.resume()  # Should not raise
+
+
+# --- network.py pause/resume ---
+
+
+async def test_network_processor_pause_cancels_loop() -> None:
+    """pause() should cancel the background network check loop."""
+    proc = MockNetworkProcessor()
+    proc.start(time.time())
+    await asyncio.sleep(0.01)
+
+    assert proc._check_network_task is not None
+    proc.pause()
+    assert proc._check_network_task is None
+
+
+async def test_network_processor_resume_restarts_loop() -> None:
+    """resume() should restart the background network check loop."""
+    proc = MockNetworkProcessor()
+    proc.start(time.time())
+    await asyncio.sleep(0.01)
+
+    proc.pause()
+    assert proc._check_network_task is None
+
+    # resume() only restarts if is_active — set it
+    proc._state = proc._state.model_copy(update={"is_active": True})
+    proc.resume()
+    assert proc._check_network_task is not None
+
+    # Cleanup
+    proc.stop()
+    await proc.await_cleanup(timeout=1.0)
+
+
+async def test_network_processor_resume_noop_when_inactive() -> None:
+    """resume() should not restart loop if processor is inactive."""
+    proc = MockNetworkProcessor()
+    proc.start(time.time())
+    await asyncio.sleep(0.01)
+
+    proc.pause()
+    # state.is_active is False (from stop behavior), so resume should be a no-op
+    proc._state = proc._state.model_copy(update={"is_active": False})
+    proc.resume()
+    assert proc._check_network_task is None

@@ -1,13 +1,29 @@
 """Tests targeting specific uncovered lines in chronopype/clocks/base.py."""
 
 import asyncio
+import logging
 
 import pytest
 
 from chronopype.clocks.backtest import BacktestClock
 from chronopype.clocks.config import ClockConfig
 from chronopype.exceptions import ClockContextError, ClockError
+from chronopype.processors.network import NetworkProcessor, NetworkStatus
 from tests.conftest import MockProcessor
+
+
+class MockNetworkProcessor(NetworkProcessor):
+    _logger = None
+
+    @classmethod
+    def logger(cls) -> logging.Logger:
+        if cls._logger is None:
+            cls._logger = logging.getLogger("MockNetworkProcessor")
+        return cls._logger
+
+    async def check_network(self) -> NetworkStatus:
+        return NetworkStatus.CONNECTED
+
 
 # ---------------------------------------------------------------------------
 # Line 139: tick_counter property
@@ -400,3 +416,116 @@ async def test_processor_reusable_after_remove(clock_config: ClockConfig):
     # Should work fine now
     clock2.add_processor(proc)
     assert proc._owner_clock is clock2
+
+
+# ---------------------------------------------------------------------------
+# pause_processor / resume_processor with NetworkProcessor
+# ---------------------------------------------------------------------------
+
+
+async def test_pause_processor_cancels_network_loop(clock_config: ClockConfig):
+    """pause_processor should cancel NetworkProcessor's background check loop."""
+    clock = BacktestClock(clock_config)
+    proc = MockNetworkProcessor()
+    clock.add_processor(proc)
+
+    async with clock:
+        # NetworkProcessor starts its check loop on start()
+        assert proc._check_network_task is not None
+
+        clock.pause_processor(proc)
+        assert proc._check_network_task is None
+
+        state = clock.get_processor_state(proc)
+        assert state is not None
+        assert not state.is_active
+
+
+async def test_resume_processor_restarts_network_loop(clock_config: ClockConfig):
+    """resume_processor should restart NetworkProcessor's background check loop."""
+    clock = BacktestClock(clock_config)
+    proc = MockNetworkProcessor()
+    clock.add_processor(proc)
+
+    async with clock:
+        clock.pause_processor(proc)
+        assert proc._check_network_task is None
+
+        clock.resume_processor(proc)
+        assert proc._check_network_task is not None
+
+        state = clock.get_processor_state(proc)
+        assert state is not None
+        assert state.is_active
+
+
+async def test_pause_resume_regular_processor(clock: BacktestClock):
+    """pause/resume on a regular processor is a no-op for background tasks."""
+    proc = MockProcessor("p")
+    clock.add_processor(proc)
+
+    async with clock:
+        clock.pause_processor(proc)
+        state = clock.get_processor_state(proc)
+        assert state is not None
+        assert not state.is_active
+
+        clock.resume_processor(proc)
+        state = clock.get_processor_state(proc)
+        assert state is not None
+        assert state.is_active
+
+
+# ---------------------------------------------------------------------------
+# shutdown() awaits NetworkProcessor cleanup
+# ---------------------------------------------------------------------------
+
+
+async def test_shutdown_awaits_network_cleanup(clock_config: ClockConfig):
+    """shutdown() should await_cleanup for NetworkProcessors."""
+    clock = BacktestClock(clock_config)
+    proc = MockNetworkProcessor()
+    clock.add_processor(proc)
+
+    async with clock:
+        # Processor is started, network loop running
+        assert proc._check_network_task is not None
+
+    # After context exit (which calls shutdown), cleanup should be complete
+    assert proc._stop_network_task is None
+
+
+async def test_shutdown_direct_awaits_cleanup(clock_config: ClockConfig):
+    """Calling shutdown() directly (not via context manager) should also await cleanup."""
+    clock = BacktestClock(clock_config)
+    proc = MockNetworkProcessor()
+    clock.add_processor(proc)
+
+    # Manually enter context
+    await clock.__aenter__()
+    assert proc._check_network_task is not None
+
+    # Call shutdown directly
+    await clock.shutdown()
+    assert proc._stop_network_task is None
+
+
+# ---------------------------------------------------------------------------
+# __aexit__ error path calls _stop_all_processors
+# ---------------------------------------------------------------------------
+
+
+async def test_aexit_error_path_stops_processors(clock_config: ClockConfig):
+    """__aexit__ with an exception should still stop all processors."""
+    clock = BacktestClock(clock_config)
+    proc = MockNetworkProcessor()
+    clock.add_processor(proc)
+
+    await clock.__aenter__()
+    assert proc._check_network_task is not None
+
+    # Exit with an error — shutdown is skipped but _stop_all_processors runs
+    await clock.__aexit__(RuntimeError, RuntimeError("test"), None)
+
+    assert proc._stop_network_task is None
+    assert clock._current_context is None
