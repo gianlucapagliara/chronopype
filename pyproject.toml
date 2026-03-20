@@ -18,8 +18,8 @@ classifiers = [
     "Framework :: AsyncIO",
 ]
 dependencies = [
-    "pydantic>=2.10.4",
-    "eventspype>=1.0.1",
+    "pydantic>=2.10.4,<3",
+    "eventspype>=1.0.1,<2",
 ]
 
 [project.urls]
