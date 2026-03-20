@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Callable
 
-from chronopype.clocks.base import BaseClock, ClockTickEvent
+from chronopype.clocks.base import BaseClock
 from chronopype.clocks.config import FLOAT_EPSILON, ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
@@ -85,73 +85,6 @@ class BacktestClock(BaseClock):
             self._current_tick = target_time
             processors = [p for p in processors if self._processor_states[p].is_active]
             await self._execute_tick(processors)
-
-    async def _execute_tick(self, processors: list[TickProcessor]) -> None:
-        """Execute a tick for all processors."""
-        self._tick_counter += 1
-
-        if self._config.concurrent_processors:
-            # Execute processors concurrently
-            tasks = []
-            for processor in processors:
-                task = asyncio.create_task(
-                    self._execute_processor(processor, self._current_tick)
-                )
-                tasks.append(task)
-
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            errors = []
-
-            # Update states for all processors first
-            for processor, result in zip(processors, results, strict=False):
-                if isinstance(result, Exception):
-                    if self._error_callback:
-                        self._error_callback(processor, result)
-                    errors.append(result)
-                else:
-                    # Update processor state after successful execution
-                    state = self._processor_states[processor]
-                    self._processor_states[processor] = state.model_copy(
-                        update={"last_timestamp": self._current_tick}
-                    )
-
-            # Emit tick event after all processors have been executed
-            self.publish(
-                self.tick_publication,
-                ClockTickEvent(
-                    timestamp=self._current_tick,
-                    tick_counter=self._tick_counter,
-                    processors=self.get_active_processors(),
-                ),
-            )
-
-            # Raise the first error if any occurred
-            if errors:
-                raise errors[0]
-        else:
-            # Execute processors sequentially
-            for processor in processors:
-                try:
-                    await self._execute_processor(processor, self._current_tick)
-                    # Update processor state after successful execution
-                    state = self._processor_states[processor]
-                    self._processor_states[processor] = state.model_copy(
-                        update={"last_timestamp": self._current_tick}
-                    )
-                except Exception as e:
-                    if self._error_callback:
-                        self._error_callback(processor, e)
-                    raise e
-
-            # Emit tick event after all processors have been executed
-            self.publish(
-                self.tick_publication,
-                ClockTickEvent(
-                    timestamp=self._current_tick,
-                    tick_counter=self._tick_counter,
-                    processors=self.get_active_processors(),
-                ),
-            )
 
     async def step(self, n: int = 1) -> float:
         """Advance the clock by exactly n ticks.

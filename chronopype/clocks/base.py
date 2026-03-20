@@ -370,6 +370,69 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             )
             raise last_error
 
+    async def _execute_tick(self, processors: list[TickProcessor]) -> None:
+        """Execute a tick for all processors.
+
+        Handles both concurrent and sequential execution based on config.
+        Publishes a ClockTickEvent after all processors have been executed.
+        """
+        self._tick_counter += 1
+
+        if self._config.concurrent_processors:
+            tasks = [
+                asyncio.create_task(
+                    self._execute_processor(processor, self._current_tick)
+                )
+                for processor in processors
+            ]
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            errors: list[Exception] = []
+
+            for processor, result in zip(processors, results, strict=False):
+                if isinstance(result, Exception):
+                    if self._error_callback:
+                        self._error_callback(processor, result)
+                    errors.append(result)
+                else:
+                    state = self._processor_states[processor]
+                    self._processor_states[processor] = state.model_copy(
+                        update={"last_timestamp": self._current_tick}
+                    )
+
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
+
+            if errors:
+                raise errors[0]
+        else:
+            for processor in processors:
+                try:
+                    await self._execute_processor(processor, self._current_tick)
+                    state = self._processor_states[processor]
+                    self._processor_states[processor] = state.model_copy(
+                        update={"last_timestamp": self._current_tick}
+                    )
+                except Exception as e:
+                    if self._error_callback:
+                        self._error_callback(processor, e)
+                    raise
+
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
+
     def _cleanup(self, error_occurred: bool = False) -> None:
         """Clean up the clock state.
 
