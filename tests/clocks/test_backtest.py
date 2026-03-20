@@ -14,7 +14,6 @@ def test_backtest_config(clock_config: ClockConfig) -> None:
     assert clock.current_timestamp == clock.start_time
 
 
-@pytest.mark.asyncio
 async def test_backtest_execution(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -30,7 +29,6 @@ async def test_backtest_execution(
     assert mock_processor.last_timestamp == clock.start_time + 5
 
 
-@pytest.mark.asyncio
 async def test_fast_forward(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -44,7 +42,6 @@ async def test_fast_forward(
     assert mock_processor.last_timestamp == clock.start_time + 5
 
 
-@pytest.mark.asyncio
 async def test_backtest_end_time(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -61,10 +58,7 @@ async def test_backtest_end_time(
         assert mock_processor.last_timestamp == clock.end_time
 
 
-@pytest.mark.asyncio
-async def test_step_single(
-    clock: BacktestClock, mock_processor: MockProcessor
-) -> None:
+async def test_step_single(clock: BacktestClock, mock_processor: MockProcessor) -> None:
     """Test stepping the clock by a single tick."""
     clock.add_processor(mock_processor)
 
@@ -76,7 +70,6 @@ async def test_step_single(
         assert clock.current_timestamp == clock.start_time + 1.0
 
 
-@pytest.mark.asyncio
 async def test_step_multiple(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -90,7 +83,6 @@ async def test_step_multiple(
         assert mock_processor.last_timestamp == clock.start_time + 3.0
 
 
-@pytest.mark.asyncio
 async def test_step_sequential_calls(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -111,7 +103,6 @@ async def test_step_sequential_calls(
         assert mock_processor.last_timestamp == clock.start_time + 4.0
 
 
-@pytest.mark.asyncio
 async def test_step_past_end_time(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -124,7 +115,6 @@ async def test_step_past_end_time(
             await clock.step(11)
 
 
-@pytest.mark.asyncio
 async def test_step_invalid_n(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -138,14 +128,12 @@ async def test_step_invalid_n(
             await clock.step(-1)
 
 
-@pytest.mark.asyncio
 async def test_step_without_context(clock: BacktestClock) -> None:
     """Test that step outside a context raises ClockError."""
     with pytest.raises(ClockError):
         await clock.step()
 
 
-@pytest.mark.asyncio
 async def test_step_to_basic(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -159,7 +147,6 @@ async def test_step_to_basic(
         assert mock_processor.last_timestamp == clock.start_time + 5.0
 
 
-@pytest.mark.asyncio
 async def test_step_to_sequential(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -177,7 +164,6 @@ async def test_step_to_sequential(
         assert mock_processor.tick_count == 10
 
 
-@pytest.mark.asyncio
 async def test_step_to_no_advance(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -190,7 +176,6 @@ async def test_step_to_no_advance(
         assert mock_processor.tick_count == 0
 
 
-@pytest.mark.asyncio
 async def test_step_to_past_end_time(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -202,14 +187,12 @@ async def test_step_to_past_end_time(
             await clock.step_to(clock.end_time + 1)
 
 
-@pytest.mark.asyncio
 async def test_step_to_without_context(clock: BacktestClock) -> None:
     """Test that step_to outside a context raises ClockError."""
     with pytest.raises(ClockError):
         await clock.step_to(clock.start_time + 1)
 
 
-@pytest.mark.asyncio
 async def test_step_does_not_set_running(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -224,7 +207,6 @@ async def test_step_does_not_set_running(
         assert mock_processor.tick_count == 5
 
 
-@pytest.mark.asyncio
 async def test_step_mixed_with_run_til(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -239,7 +221,6 @@ async def test_step_mixed_with_run_til(
         assert mock_processor.tick_count == 7
 
 
-@pytest.mark.asyncio
 async def test_step_to_exact_end_time(
     clock: BacktestClock, mock_processor: MockProcessor
 ) -> None:
@@ -252,7 +233,6 @@ async def test_step_to_exact_end_time(
         assert mock_processor.tick_count == 10
 
 
-@pytest.mark.asyncio
 async def test_backtest_deterministic(clock: BacktestClock) -> None:
     """Test that backtest execution is deterministic."""
     processors = [MockProcessor(f"mock{i}") for i in range(3)]

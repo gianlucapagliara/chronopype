@@ -117,6 +117,7 @@ class TimestampFormat(Enum):
             return timestamp
 
         if in_format.value < out_format.value:
-            return timestamp * (10 ** (out_format.value - in_format.value))
+            result: float = timestamp * (10 ** (out_format.value - in_format.value))
         else:
-            return timestamp / (10 ** (in_format.value - out_format.value))
+            result = timestamp / (10 ** (in_format.value - out_format.value))
+        return result

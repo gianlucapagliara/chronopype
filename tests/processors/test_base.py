@@ -40,7 +40,6 @@ def test_add_remove_processor(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_async_tick(
     clock_fixture: str, request: pytest.FixtureRequest, mock_processor: MockProcessor
 ) -> None:
@@ -93,7 +92,6 @@ def test_processor_state_transitions(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_state_management(
     clock_fixture: str, request: pytest.FixtureRequest, mock_processor: MockProcessor
 ) -> None:

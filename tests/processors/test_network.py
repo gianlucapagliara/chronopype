@@ -46,7 +46,6 @@ def network_processor() -> MockNetworkProcessor:
     return MockNetworkProcessor()
 
 
-@pytest.mark.asyncio
 async def test_network_processor_initialization(
     network_processor: MockNetworkProcessor,
 ) -> None:
@@ -59,7 +58,6 @@ async def test_network_processor_initialization(
     assert network_processor.network_error_wait_time == 60.0
 
 
-@pytest.mark.asyncio
 async def test_network_processor_start_stop(
     network_processor: MockNetworkProcessor,
 ) -> None:
@@ -82,7 +80,6 @@ async def test_network_processor_start_stop(
     assert status.value == NetworkStatus.STOPPED.value
 
 
-@pytest.mark.asyncio
 async def test_network_processor_error_handling(
     network_processor: MockNetworkProcessor,
 ) -> None:
@@ -106,7 +103,6 @@ async def test_network_processor_error_handling(
     network_processor.stop()
 
 
-@pytest.mark.asyncio
 async def test_network_processor_timeout(
     network_processor: MockNetworkProcessor,
 ) -> None:
@@ -131,7 +127,6 @@ async def test_network_processor_timeout(
     network_processor.stop()
 
 
-@pytest.mark.asyncio
 async def test_network_processor_backoff(
     network_processor: MockNetworkProcessor,
 ) -> None:

@@ -31,7 +31,6 @@ def test_processor_stats(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_lagging_processors(
     clock_fixture: str, request: pytest.FixtureRequest
 ) -> None:
@@ -56,7 +55,6 @@ async def test_lagging_processors(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_performance_tracking(
     clock_fixture: str, request: pytest.FixtureRequest, mock_processor: MockProcessor
 ) -> None:

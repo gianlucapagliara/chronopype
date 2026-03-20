@@ -9,7 +9,6 @@ from tests.conftest import MockProcessor
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_timeout(
     clock_fixture: str,
     request: pytest.FixtureRequest,
@@ -32,7 +31,6 @@ async def test_processor_timeout(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_timeout_with_retries(
     clock_fixture: str,
     request: pytest.FixtureRequest,
@@ -68,7 +66,6 @@ async def test_processor_timeout_with_retries(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_error_handling(
     clock_fixture: str,
     request: pytest.FixtureRequest,
@@ -99,7 +96,6 @@ async def test_processor_error_handling(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_concurrent_processor_errors(
     clock_fixture: str, request: pytest.FixtureRequest
 ) -> None:
@@ -130,7 +126,6 @@ async def test_concurrent_processor_errors(
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
-@pytest.mark.asyncio
 async def test_processor_execution_errors(
     clock_fixture: str,
     request: pytest.FixtureRequest,

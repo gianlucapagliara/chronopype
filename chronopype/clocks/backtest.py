@@ -183,9 +183,7 @@ class BacktestClock(BaseClock):
         for _ in range(n):
             self._current_tick += self._config.tick_size
             processors = [
-                p
-                for p in self._current_context
-                if self._processor_states[p].is_active
+                p for p in self._current_context if self._processor_states[p].is_active
             ]
             await self._execute_tick(processors)
 
@@ -221,9 +219,7 @@ class BacktestClock(BaseClock):
         for _ in range(num_ticks):
             self._current_tick += self._config.tick_size
             processors = [
-                p
-                for p in self._current_context
-                if self._processor_states[p].is_active
+                p for p in self._current_context if self._processor_states[p].is_active
             ]
             await self._execute_tick(processors)
 
@@ -231,9 +227,7 @@ class BacktestClock(BaseClock):
         if abs(self._current_tick - target_time) > 1e-10:
             self._current_tick = target_time
             processors = [
-                p
-                for p in self._current_context
-                if self._processor_states[p].is_active
+                p for p in self._current_context if self._processor_states[p].is_active
             ]
             await self._execute_tick(processors)
 

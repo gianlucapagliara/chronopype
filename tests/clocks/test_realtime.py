@@ -1,8 +1,6 @@
 import asyncio
 import time
 
-import pytest
-
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.realtime import RealtimeClock
 from tests.conftest import MockProcessor
@@ -15,7 +13,6 @@ def test_realtime_config(realtime_config: ClockConfig) -> None:
     assert clock.current_timestamp > 0  # Should be initialized to current time
 
 
-@pytest.mark.asyncio
 async def test_realtime_execution(
     realtime_clock: RealtimeClock, mock_processor: MockProcessor
 ) -> None:
@@ -36,7 +33,6 @@ async def test_realtime_execution(
     assert 0.3 <= end_time - start_time <= 1.0  # Should take roughly the expected time
 
 
-@pytest.mark.asyncio
 async def test_realtime_drift_handling(
     realtime_clock: RealtimeClock, mock_processor: MockProcessor
 ) -> None:
@@ -62,7 +58,6 @@ async def test_realtime_drift_handling(
     assert mock_processor.tick_count > 0
 
 
-@pytest.mark.asyncio
 async def test_realtime_concurrent_execution(realtime_clock: RealtimeClock) -> None:
     """Test concurrent execution in realtime mode."""
     processors = [MockProcessor(f"mock{i}") for i in range(3)]
@@ -86,7 +81,6 @@ async def test_realtime_concurrent_execution(realtime_clock: RealtimeClock) -> N
     assert 0.3 <= end_time - start_time <= 1.0
 
 
-@pytest.mark.asyncio
 async def test_realtime_late_processor(
     realtime_clock: RealtimeClock, mock_processor: MockProcessor
 ) -> None:
