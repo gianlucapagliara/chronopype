@@ -52,6 +52,17 @@ class RealtimeClock(BaseClock):
         self._running = True
         self._started = True
 
+        # Ensure all processors in context have been started
+        for processor in list(self._current_context):
+            if processor._state.is_active:
+                continue
+            try:
+                processor.start(self._current_tick)
+            except Exception as e:
+                self._processors.remove(processor)
+                self._processor_states.pop(processor, None)
+                raise ClockError(f"Failed to start processor: {str(e)}") from e
+
         # Calculate the actual target time based on current time
         current_time = time.time()
         duration = target_time - self._current_tick

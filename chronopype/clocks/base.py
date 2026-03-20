@@ -288,6 +288,10 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 self._processor_states.pop(processor)
                 raise ClockError(f"Failed to start processor: {str(e)}") from e
 
+        # Add to current context so the processor gets ticked
+        if self._current_context is not None and processor not in self._current_context:
+            self._current_context.append(processor)
+
     def remove_processor(self, processor: TickProcessor) -> None:
         """Remove a processor from the clock and release ownership."""
         if processor not in self._processors:
@@ -309,6 +313,10 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         self._processors.remove(processor)
         self._processor_states.pop(processor, None)
         processor._owner_clock = None
+
+        # Remove from current context so the processor is no longer ticked
+        if self._current_context is not None and processor in self._current_context:
+            self._current_context.remove(processor)
 
     def pause_processor(self, processor: TickProcessor) -> None:
         """Pause a processor.
