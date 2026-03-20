@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import Callable
 
 from chronopype.clocks.base import BaseClock, ClockTickEvent
-from chronopype.clocks.config import ClockConfig
+from chronopype.clocks.config import FLOAT_EPSILON, ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
 from chronopype.processors.base import TickProcessor
@@ -80,7 +80,7 @@ class BacktestClock(BaseClock):
 
         # Set final timestamp to exactly match target_time
         if (
-            abs(self._current_tick - target_time) > 1e-10
+            abs(self._current_tick - target_time) > FLOAT_EPSILON
         ):  # Handle floating point precision
             self._current_tick = target_time
             processors = [p for p in processors if self._processor_states[p].is_active]
@@ -177,7 +177,7 @@ class BacktestClock(BaseClock):
             raise ClockError("Number of ticks must be at least 1")
 
         target_tick = self._current_tick + n * self._config.tick_size
-        if target_tick > self._config.end_time + 1e-10:
+        if target_tick > self._config.end_time + FLOAT_EPSILON:
             raise ClockError("Cannot step past end_time")
 
         for _ in range(n):
@@ -209,7 +209,7 @@ class BacktestClock(BaseClock):
         if not self._current_context:
             raise ClockError("Clock must be started in a context")
 
-        if target_time > self._config.end_time + 1e-10:
+        if target_time > self._config.end_time + FLOAT_EPSILON:
             raise ClockError("Cannot step past end_time")
 
         num_ticks = int((target_time - self._current_tick) / self._config.tick_size)
@@ -224,7 +224,7 @@ class BacktestClock(BaseClock):
             await self._execute_tick(processors)
 
         # Handle floating-point remainder: align to target_time if needed
-        if abs(self._current_tick - target_time) > 1e-10:
+        if abs(self._current_tick - target_time) > FLOAT_EPSILON:
             self._current_tick = target_time
             processors = [
                 p for p in self._current_context if self._processor_states[p].is_active
