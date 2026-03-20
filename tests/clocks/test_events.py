@@ -80,9 +80,7 @@ class TestClockTickEvent:
 
         assert len(events) == 3
 
-    async def test_tick_event_has_correct_counter(
-        self, clock: BacktestClock
-    ) -> None:
+    async def test_tick_event_has_correct_counter(self, clock: BacktestClock) -> None:
         events: list[ClockTickEvent] = []
         processor = MockProcessor()
         clock.add_processor(processor)
@@ -205,9 +203,7 @@ class TestClockStopEvent:
 class TestEventOrdering:
     """Test that events fire in the correct order."""
 
-    async def test_start_before_tick_before_stop(
-        self, clock: BacktestClock
-    ) -> None:
+    async def test_start_before_tick_before_stop(self, clock: BacktestClock) -> None:
         order: list[str] = []
         processor = MockProcessor()
         clock.add_processor(processor)

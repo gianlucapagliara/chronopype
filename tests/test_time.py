@@ -104,7 +104,9 @@ class TestTimestampFormatGetFormat:
         )
 
     def test_string_input(self) -> None:
-        assert TimestampFormat.get_format("1234567890000") == TimestampFormat.MILLISECONDS
+        assert (
+            TimestampFormat.get_format("1234567890000") == TimestampFormat.MILLISECONDS
+        )
 
     def test_between_format_boundaries(self) -> None:
         """11-12 digit numbers should be detected as seconds (<=10 digits check)."""
@@ -164,9 +166,7 @@ class TestTimestampFormatConvertTs:
         assert result == 1234567890500.0
 
     def test_milliseconds_to_microseconds(self) -> None:
-        result = TimestampFormat.convert_ts(
-            1234567890000, TimestampFormat.MICROSECONDS
-        )
+        result = TimestampFormat.convert_ts(1234567890000, TimestampFormat.MICROSECONDS)
         assert result == 1234567890000000.0
 
     def test_microseconds_to_milliseconds(self) -> None:

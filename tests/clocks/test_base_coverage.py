@@ -1,18 +1,13 @@
 """Tests targeting specific uncovered lines in chronopype/clocks/base.py."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
 from chronopype.clocks.backtest import BacktestClock
 from chronopype.clocks.config import ClockConfig
-from chronopype.clocks.modes import ClockMode
-from chronopype.clocks.base import BaseClock
 from chronopype.exceptions import ClockContextError, ClockError
-from chronopype.processors.base import TickProcessor
 from tests.conftest import MockProcessor
-
 
 # ---------------------------------------------------------------------------
 # Line 139: tick_counter property
@@ -137,8 +132,6 @@ async def test_aenter_processor_start_failure_cleans_up(clock_config: ClockConfi
     bad_proc = MockProcessor("bad_start")
 
     # Override bad_proc.start to raise
-    original_start = bad_proc.start
-
     def failing_start(timestamp: float) -> None:
         raise RuntimeError("start failed")
 

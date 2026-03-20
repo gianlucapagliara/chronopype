@@ -1,12 +1,8 @@
 """Tests for concurrent processor execution and pause/resume during execution."""
 
-import asyncio
-from collections.abc import Callable
-
 import pytest
 
 from chronopype.clocks.backtest import BacktestClock
-from chronopype.clocks.base import BaseClock
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.clocks.realtime import RealtimeClock

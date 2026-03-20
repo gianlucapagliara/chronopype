@@ -10,7 +10,6 @@ from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockError
 from tests.conftest import MockProcessor
 
-
 # --- Line 28: init with wrong mode ---
 
 

@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import time
-from unittest.mock import AsyncMock, patch
 
 import pytest
 

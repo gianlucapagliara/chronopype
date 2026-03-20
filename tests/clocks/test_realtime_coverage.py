@@ -1,7 +1,6 @@
 """Tests for uncovered lines in chronopype/clocks/realtime.py."""
 
 import asyncio
-import logging
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -135,7 +134,9 @@ async def test_drift_logging(realtime_clock: RealtimeClock) -> None:
 
     original_time = rt_module.time
     original_logger = rt_module.logger
-    mock_logger = type("MockLogger", (), {"debug": staticmethod(lambda *a, **kw: None)})()
+    mock_logger = type(
+        "MockLogger", (), {"debug": staticmethod(lambda *a, **kw: None)}
+    )()
     debug_calls: list[tuple] = []
 
     def capture_debug(*args: object, **kwargs: object) -> None:
