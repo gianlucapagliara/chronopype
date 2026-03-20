@@ -1,0 +1,53 @@
+site_name: Chronopype
+site_url: https://gianlucapagliara.github.io/chronopype/
+site_description: A flexible clock implementation for real-time and backtesting scenarios in Python
+site_author: Gianluca Pagliara
+repo_url: https://github.com/gianlucapagliara/chronopype
+repo_name: gianlucapagliara/chronopype
+
+theme:
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - python
+    - bash
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - codehilite:
+      guess_lang: false
+  - def_list
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - Clocks: guide/clocks.md
+      - Processors: guide/processors.md
+      - Network Processor: guide/network-processor.md
+      - Performance Monitoring: guide/performance.md
+      - Time Utilities: guide/time-utilities.md
+  - API Reference:
+      - Clocks:
+          - ClockConfig: api/clock-config.md
+          - ClockMode: api/clock-mode.md
+          - BaseClock: api/base-clock.md
+          - RealtimeClock: api/realtime-clock.md
+          - BacktestClock: api/backtest-clock.md
+      - Processors:
+          - TickProcessor: api/tick-processor.md
+          - NetworkProcessor: api/network-processor.md
+          - ProcessorState: api/processor-state.md
+      - Utilities:
+          - Time: api/time.md
+          - Exceptions: api/exceptions.md
+  - Development:
+      - Contributing: development/contributing.md
