@@ -485,7 +485,14 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                         )
                     except Exception:
                         error_occurred = True
-                        pass  # Ignore errors during cleanup
+
+                # Await cleanup for processors that need async teardown
+                for processor in self._current_context:
+                    if hasattr(processor, "await_cleanup"):
+                        try:
+                            await processor.await_cleanup()
+                        except Exception:
+                            pass
 
             self._cleanup(error_occurred=error_occurred)
 
