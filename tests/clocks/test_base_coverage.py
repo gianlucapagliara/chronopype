@@ -298,12 +298,36 @@ async def test_aexit_await_cleanup_exception_suppressed(clock_config: ClockConfi
 
 
 # ---------------------------------------------------------------------------
-# Line 602: get_processor_stats for unknown processor returns {}
+# get_processor_stats
 # ---------------------------------------------------------------------------
 
 
 async def test_get_processor_stats_unknown_processor(clock: BacktestClock):
-    """get_processor_stats returns {} for an unregistered processor."""
+    """get_processor_stats returns None for an unregistered processor."""
     unknown = MockProcessor("unknown")
     result = clock.get_processor_stats(unknown)
-    assert result == {}
+    assert result is None
+
+
+async def test_get_processor_stats_returns_typed_dict(clock: BacktestClock):
+    """get_processor_stats returns a ProcessorStats TypedDict with correct fields."""
+    proc = MockProcessor("p")
+    clock.add_processor(proc)
+
+    async with clock:
+        await clock.step(3)
+
+    stats = clock.get_processor_stats(proc)
+    assert stats is not None
+    assert stats["total_ticks"] == 3
+    assert stats["successful_ticks"] == 3
+    assert stats["failed_ticks"] == 0
+    assert stats["error_count"] == 0
+    assert stats["consecutive_errors"] == 0
+    assert stats["error_rate"] == 0.0
+    assert stats["avg_execution_time"] >= 0.0
+    assert stats["max_execution_time"] >= 0.0
+    assert stats["std_dev_execution_time"] >= 0.0
+    assert stats["last_error"] is None
+    assert stats["last_error_time"] is None
+    assert stats["last_success_time"] is not None

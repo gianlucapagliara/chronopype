@@ -4,7 +4,8 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Protocol
+from datetime import datetime
+from typing import Any, Protocol, TypedDict
 
 from eventspype.pub.multipublisher import MultiPublisher
 from eventspype.pub.publication import EventPublication
@@ -43,6 +44,25 @@ class ClockStopEvent:
     timestamp: float
     total_ticks: int
     final_states: dict[TickProcessor, ProcessorState]
+
+
+class ProcessorStats(TypedDict):
+    """Type-safe statistics dictionary for a processor."""
+
+    total_ticks: int
+    successful_ticks: int
+    failed_ticks: int
+    error_count: int
+    consecutive_errors: int
+    retry_count: int
+    max_consecutive_retries: int
+    avg_execution_time: float
+    max_execution_time: float
+    std_dev_execution_time: float
+    error_rate: float
+    last_error: str | None
+    last_error_time: datetime | None
+    last_success_time: datetime | None
 
 
 class AsyncContextManager(Protocol):
@@ -211,6 +231,8 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             raise ClockError("Processor already registered")
 
         logger.debug("Adding processor %s", processor)
+        # Sync stats window size from clock config to processor
+        processor._stats_window_size = self._config.stats_window_size
         self._processors.append(processor)
         self._processor_states[processor] = ProcessorState(
             last_timestamp=self._current_tick,
@@ -338,21 +360,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
                 execution_time = time.perf_counter() - start_time
 
-                # Update execution time stats with windowed list
-                window = self._config.stats_window_size
-                if len(state.execution_times) >= window:
-                    execution_times = list(state.execution_times[-(window - 1) :])
-                else:
-                    execution_times = list(state.execution_times)
-                execution_times.append(execution_time)
-
                 # Update processor state after successful execution
-                self._processor_states[processor] = state.model_copy(
+                new_state = state.update_execution_time(
+                    execution_time, self._config.stats_window_size
+                )
+                self._processor_states[processor] = new_state.model_copy(
                     update={
-                        "execution_times": execution_times,
-                        "consecutive_errors": 0,
                         "retry_count": 0,
-                        "last_success_time": time.time(),
                         "last_timestamp": timestamp,
                         "max_consecutive_retries": max_consecutive_retries,
                     }
@@ -388,12 +402,9 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 retry_count,
                 last_error,
             )
-            self._processor_states[processor] = state.model_copy(
+            new_state = state.record_error(last_error, timestamp)
+            self._processor_states[processor] = new_state.model_copy(
                 update={
-                    "error_count": state.error_count + 1,
-                    "consecutive_errors": state.consecutive_errors + 1,
-                    "last_error": last_error,
-                    "last_error_time": time.time(),
                     "last_timestamp": timestamp,
                     "retry_count": retry_count,
                     "max_consecutive_retries": max_consecutive_retries,
@@ -595,29 +606,29 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
             self._cleanup(error_occurred=error_occurred)
 
-    def get_processor_stats(self, processor: TickProcessor) -> dict[str, Any]:
-        """Get detailed statistics for a processor."""
+    def get_processor_stats(self, processor: TickProcessor) -> ProcessorStats | None:
+        """Get detailed statistics for a processor.
+
+        Returns None if the processor is not registered.
+        Uses ProcessorState properties for correct calculations.
+        """
         state = self._processor_states.get(processor)
         if not state:
-            return {}
+            return None
 
-        execution_times = state.execution_times
-        avg_execution_time = (
-            sum(execution_times) / len(execution_times) if execution_times else 0
+        return ProcessorStats(
+            total_ticks=state.total_ticks,
+            successful_ticks=state.successful_ticks,
+            failed_ticks=state.failed_ticks,
+            error_count=state.error_count,
+            consecutive_errors=state.consecutive_errors,
+            retry_count=state.retry_count,
+            max_consecutive_retries=state.max_consecutive_retries,
+            avg_execution_time=state.avg_execution_time,
+            max_execution_time=state.max_execution_time,
+            std_dev_execution_time=state.std_dev_execution_time,
+            error_rate=state.error_rate,
+            last_error=state.last_error,
+            last_error_time=state.last_error_time,
+            last_success_time=state.last_success_time,
         )
-
-        return {
-            "execution_times": execution_times,
-            "error_count": state.error_count,
-            "consecutive_errors": state.consecutive_errors,
-            "retry_count": state.retry_count,
-            "max_consecutive_retries": state.max_consecutive_retries,
-            "last_error": str(state.last_error) if state.last_error else None,
-            "last_error_time": state.last_error_time,
-            "last_success_time": state.last_success_time,
-            "total_ticks": len(execution_times),
-            "successful_ticks": len(execution_times) - state.error_count,
-            "failed_ticks": state.error_count,
-            "avg_execution_time": avg_execution_time,
-            "max_execution_time": max(execution_times) if execution_times else 0,
-        }

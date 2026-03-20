@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+from pydantic import ValidationError
 
 from chronopype.clocks.backtest import BacktestClock
 from chronopype.clocks.config import ClockConfig
@@ -194,3 +195,62 @@ async def test_fast_forward_past_end_time(clock_config: ClockConfig):
             ClockError, match="Cannot fast forward past end_time in backtest mode"
         ):
             await clock.fast_forward(999.0)
+
+
+# --- Config validation ---
+
+
+class TestConfigValidation:
+    """Test ClockConfig field validation."""
+
+    def test_processor_timeout_must_be_positive(self):
+        with pytest.raises(ValidationError, match="processor_timeout"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, processor_timeout=0)
+
+    def test_processor_timeout_negative_rejected(self):
+        with pytest.raises(ValidationError, match="processor_timeout"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, processor_timeout=-1.0)
+
+    def test_stats_window_size_must_be_positive(self):
+        with pytest.raises(ValidationError, match="stats_window_size"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, stats_window_size=0)
+
+    def test_stats_window_size_negative_rejected(self):
+        with pytest.raises(ValidationError, match="stats_window_size"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, stats_window_size=-5)
+
+    def test_stats_window_size_exceeds_max(self):
+        with pytest.raises(ValidationError, match="stats_window_size"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, stats_window_size=10001)
+
+    def test_stats_window_size_at_max(self):
+        config = ClockConfig(clock_mode=ClockMode.BACKTEST, stats_window_size=10000)
+        assert config.stats_window_size == 10000
+
+    def test_max_retries_must_be_non_negative(self):
+        with pytest.raises(ValidationError, match="max_retries"):
+            ClockConfig(clock_mode=ClockMode.BACKTEST, max_retries=-1)
+
+    def test_max_retries_zero_is_valid(self):
+        config = ClockConfig(clock_mode=ClockMode.BACKTEST, max_retries=0)
+        assert config.max_retries == 0
+
+
+# --- Stats window sync from clock to processor ---
+
+
+async def test_stats_window_size_synced_to_processor():
+    """Clock should sync its stats_window_size to processors on add."""
+    config = ClockConfig(
+        clock_mode=ClockMode.BACKTEST,
+        tick_size=1.0,
+        start_time=0.0,
+        end_time=10.0,
+        stats_window_size=42,
+    )
+    clock = BacktestClock(config)
+    proc = MockProcessor("p")
+    assert proc._stats_window_size == 100  # default
+
+    clock.add_processor(proc)
+    assert proc._stats_window_size == 42  # synced from clock
