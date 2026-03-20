@@ -22,16 +22,23 @@ class ClockConfig(BaseModel):
         default=0.0, description="End time in UNIX timestamp (0 for no end)"
     )
     processor_timeout: float = Field(
-        default=1.0, description="Timeout for each processor execution in seconds"
+        default=1.0,
+        gt=0,
+        description="Timeout for each processor execution in seconds",
     )
     max_retries: int = Field(
-        default=3, description="Maximum number of retries for failed processors"
+        default=3,
+        ge=0,
+        description="Maximum number of retries for failed processors",
     )
     concurrent_processors: bool = Field(
         default=False, description="Whether to run processors concurrently"
     )
     stats_window_size: int = Field(
-        default=100, description="Number of executions to keep for statistics"
+        default=100,
+        gt=0,
+        le=10000,
+        description="Number of executions to keep for statistics",
     )
 
     @field_validator("end_time")

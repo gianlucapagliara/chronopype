@@ -1,5 +1,3 @@
-from typing import Any
-
 from chronopype.processors.models import ProcessorState
 
 
@@ -20,10 +18,6 @@ class TickProcessor:
         """Current timestamp of the processor."""
         return self._state.last_timestamp or 0
 
-    def _update_state(self, **kwargs: Any) -> None:
-        """Update the processor state with new values."""
-        self._state = self._state.model_copy(update=kwargs)
-
     def record_execution(self, execution_time: float) -> None:
         """Record a successful execution."""
         self._state = self._state.update_execution_time(
@@ -37,7 +31,9 @@ class TickProcessor:
 
     def start(self, timestamp: float) -> None:
         """Start the processor."""
-        self._update_state(last_timestamp=timestamp, is_active=True)
+        self._state = self._state.model_copy(
+            update={"last_timestamp": timestamp, "is_active": True}
+        )
 
     def tick(self, timestamp: float) -> None:
         """Process a tick."""
@@ -45,7 +41,7 @@ class TickProcessor:
 
     def stop(self) -> None:
         """Stop the processor."""
-        self._update_state(is_active=False)
+        self._state = self._state.model_copy(update={"is_active": False})
 
     async def async_tick(self, timestamp: float) -> None:
         """Async version of tick. Default implementation calls sync tick."""

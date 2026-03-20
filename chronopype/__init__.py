@@ -2,6 +2,12 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
+from chronopype.clocks.base import (
+    ClockStartEvent,
+    ClockStopEvent,
+    ClockTickEvent,
+    ProcessorStats,
+)
 from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import (
@@ -23,8 +29,12 @@ __all__ = [
     "ClockMode",
     "ClockError",
     "ClockContextError",
+    "ClockStartEvent",
+    "ClockTickEvent",
+    "ClockStopEvent",
     "ProcessorError",
     "ProcessorTimeoutError",
+    "ProcessorStats",
     "Time",
     "TimestampFormat",
 ]
