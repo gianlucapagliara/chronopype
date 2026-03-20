@@ -230,12 +230,5 @@ class NetworkProcessor(TickProcessor):
         )
 
     async def async_tick(self, timestamp: float) -> None:
-        """Override this method to implement asynchronous tick processing"""
-        start_time = time.time()
-        try:
-            await super().async_tick(timestamp)
-            execution_time = time.time() - start_time
-            self.record_execution(execution_time)
-        except Exception as e:
-            self.record_error(e, timestamp)
-            raise
+        """Process a tick. Execution stats are tracked by the clock."""
+        await super().async_tick(timestamp)

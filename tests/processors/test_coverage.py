@@ -184,11 +184,11 @@ def test_on_disconnected_logs(caplog: pytest.LogCaptureFixture) -> None:
     assert "Stopping networking" in caplog.text
 
 
-# Lines 234-241: async_tick error recording
-async def test_async_tick_error_recording() -> None:
+# async_tick delegates to super without double-tracking
+async def test_async_tick_propagates_errors() -> None:
+    """async_tick should propagate errors without recording them (clock handles that)."""
     proc = MockNetworkProcessor()
 
-    # Make TickProcessor.async_tick (super) raise by patching tick()
     def failing_tick(ts: float) -> None:
         raise ValueError("tick error")
 
@@ -197,5 +197,5 @@ async def test_async_tick_error_recording() -> None:
     with pytest.raises(ValueError, match="tick error"):
         await proc.async_tick(1.0)
 
-    assert proc.state.error_count == 1
-    assert proc.state.last_error == "tick error"
+    # Error is NOT recorded by the processor — the clock is responsible for that
+    assert proc.state.error_count == 0

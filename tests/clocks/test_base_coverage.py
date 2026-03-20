@@ -331,3 +331,72 @@ async def test_get_processor_stats_returns_typed_dict(clock: BacktestClock):
     assert stats["last_error"] is None
     assert stats["last_error_time"] is None
     assert stats["last_success_time"] is not None
+
+
+# ---------------------------------------------------------------------------
+# Processor ownership and state delegation
+# ---------------------------------------------------------------------------
+
+
+async def test_processor_ownership_set_on_add(clock: BacktestClock):
+    """add_processor should set _owner_clock on the processor."""
+    proc = MockProcessor("p")
+    assert proc._owner_clock is None
+
+    clock.add_processor(proc)
+    assert proc._owner_clock is clock
+
+
+async def test_processor_ownership_cleared_on_remove(clock: BacktestClock):
+    """remove_processor should clear _owner_clock."""
+    proc = MockProcessor("p")
+    clock.add_processor(proc)
+    clock.remove_processor(proc)
+    assert proc._owner_clock is None
+
+
+async def test_processor_cannot_be_added_to_two_clocks(clock_config: ClockConfig):
+    """Adding a processor to a second clock should raise ClockError."""
+    clock1 = BacktestClock(clock_config)
+    clock2 = BacktestClock(clock_config)
+    proc = MockProcessor("p")
+
+    clock1.add_processor(proc)
+    with pytest.raises(ClockError, match="already registered to another clock"):
+        clock2.add_processor(proc)
+
+
+async def test_processor_state_delegates_to_clock(clock: BacktestClock):
+    """processor.state should return the clock's state when registered."""
+    proc = MockProcessor("p")
+    clock.add_processor(proc)
+
+    async with clock:
+        await clock.step(3)
+
+    # processor.state and clock.get_processor_state() should be the same object
+    clock_state = clock.get_processor_state(proc)
+    assert proc.state is clock_state
+    assert proc.state.total_ticks == 3
+
+
+async def test_processor_state_standalone():
+    """processor.state should return internal state when not registered to a clock."""
+    proc = MockProcessor("p")
+    assert proc._owner_clock is None
+    # Should return the processor's own _state
+    assert proc.state is proc._state
+
+
+async def test_processor_reusable_after_remove(clock_config: ClockConfig):
+    """A processor removed from one clock can be added to another."""
+    clock1 = BacktestClock(clock_config)
+    clock2 = BacktestClock(clock_config)
+    proc = MockProcessor("p")
+
+    clock1.add_processor(proc)
+    clock1.remove_processor(proc)
+
+    # Should work fine now
+    clock2.add_processor(proc)
+    assert proc._owner_clock is clock2

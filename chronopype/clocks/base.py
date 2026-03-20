@@ -226,13 +226,23 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         )
 
     def add_processor(self, processor: TickProcessor) -> None:
-        """Add a processor to the clock."""
+        """Add a processor to the clock.
+
+        A processor can only belong to one clock at a time. Adding a processor
+        that is already registered to another clock will raise ClockError.
+        """
         if processor in self._processors:
             raise ClockError("Processor already registered")
+        if processor._owner_clock is not None:
+            raise ClockError(
+                "Processor is already registered to another clock. "
+                "Remove it from the other clock first."
+            )
 
         logger.debug("Adding processor %s", processor)
         # Sync stats window size from clock config to processor
         processor._stats_window_size = self._config.stats_window_size
+        processor._owner_clock = self
         self._processors.append(processor)
         self._processor_states[processor] = ProcessorState(
             last_timestamp=self._current_tick,
@@ -258,7 +268,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 raise ClockError(f"Failed to start processor: {str(e)}") from e
 
     def remove_processor(self, processor: TickProcessor) -> None:
-        """Remove a processor from the clock."""
+        """Remove a processor from the clock and release ownership."""
         if processor not in self._processors:
             raise ClockError("Processor not registered")
         logger.debug("Removing processor %s", processor)
@@ -272,10 +282,12 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 # Still remove the processor but propagate the error
                 self._processors.remove(processor)
                 self._processor_states.pop(processor, None)
+                processor._owner_clock = None
                 raise ClockError(f"Failed to stop processor: {str(e)}") from e
 
         self._processors.remove(processor)
         self._processor_states.pop(processor, None)
+        processor._owner_clock = None
 
     def pause_processor(self, processor: TickProcessor) -> None:
         """Pause a processor."""
@@ -431,7 +443,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             results = await asyncio.gather(*tasks, return_exceptions=True)
             errors: list[Exception] = []
 
-            for processor, result in zip(processors, results, strict=False):
+            for processor, result in zip(processors, results, strict=True):
                 if isinstance(result, Exception):
                     if self._error_callback:
                         self._error_callback(processor, result)

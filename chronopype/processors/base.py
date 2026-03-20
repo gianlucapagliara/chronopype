@@ -1,22 +1,40 @@
+from typing import Any
+
 from chronopype.processors.models import ProcessorState
 
 
 class TickProcessor:
-    """Base class for tick processors."""
+    """Base class for tick processors.
+
+    When registered to a clock, the clock is the single source of truth for
+    processor state (execution times, error counts, etc.). The ``state``
+    property delegates to the clock's copy of the state automatically.
+    """
 
     def __init__(self, stats_window_size: int = 100) -> None:
         self._state = ProcessorState()
         self._stats_window_size = stats_window_size
+        self._owner_clock: Any = None  # Set by BaseClock.add_processor()
 
     @property
     def state(self) -> ProcessorState:
-        """Current state of the processor."""
+        """Current state of the processor.
+
+        Returns the clock-managed state when registered to a clock,
+        otherwise returns the processor's own internal state.
+        """
+        if self._owner_clock is not None:
+            clock_state: ProcessorState | None = (
+                self._owner_clock._processor_states.get(self)
+            )
+            if clock_state is not None:
+                return clock_state
         return self._state
 
     @property
     def current_timestamp(self) -> float:
         """Current timestamp of the processor."""
-        return self._state.last_timestamp or 0
+        return self.state.last_timestamp or 0
 
     def record_execution(self, execution_time: float) -> None:
         """Record a successful execution."""
