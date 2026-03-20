@@ -118,49 +118,44 @@ class ProcessorState(BaseModel):
         self, execution_time: float, window_size: int
     ) -> "ProcessorState":
         """Update execution times list while maintaining window size."""
-        execution_times = list(self.execution_times)
-        if len(execution_times) >= window_size:
-            execution_times = execution_times[-window_size + 1 :]
+        # Efficient: only keep the tail we need, then append
+        if len(self.execution_times) >= window_size:
+            execution_times = list(self.execution_times[-(window_size - 1) :])
+        else:
+            execution_times = list(self.execution_times)
         execution_times.append(execution_time)
 
-        # Reset error tracking on successful execution
-        return ProcessorState(
-            **self.model_copy(
-                update={
-                    "execution_times": execution_times,
-                    "consecutive_errors": 0,
-                    "last_success_time": datetime.now(),
-                }
-            ).model_dump()
+        return self.model_copy(
+            update={
+                "execution_times": execution_times,
+                "consecutive_errors": 0,
+                "last_success_time": datetime.now(),
+            }
         )
 
     def record_error(self, error: Exception, timestamp: float) -> "ProcessorState":
         """Record an error occurrence."""
         now = datetime.fromtimestamp(timestamp)
-        return ProcessorState(
-            **self.model_copy(
-                update={
-                    "error_count": self.error_count + 1,
-                    "consecutive_errors": self.consecutive_errors + 1,
-                    "last_error": str(error),
-                    "last_error_time": now,
-                }
-            ).model_dump()
+        return self.model_copy(
+            update={
+                "error_count": self.error_count + 1,
+                "consecutive_errors": self.consecutive_errors + 1,
+                "last_error": str(error),
+                "last_error_time": now,
+            }
         )
 
     def update_retry_count(self, retry_count: int) -> "ProcessorState":
         """Update retry count and track maximum consecutive retries."""
-        return ProcessorState(
-            **self.model_copy(
-                update={
-                    "retry_count": retry_count,
-                    "max_consecutive_retries": max(
-                        self.max_consecutive_retries, retry_count
-                    ),
-                }
-            ).model_dump()
+        return self.model_copy(
+            update={
+                "retry_count": retry_count,
+                "max_consecutive_retries": max(
+                    self.max_consecutive_retries, retry_count
+                ),
+            }
         )
 
     def reset_retries(self) -> "ProcessorState":
         """Reset retry count after successful execution."""
-        return ProcessorState(**self.model_copy(update={"retry_count": 0}).model_dump())
+        return self.model_copy(update={"retry_count": 0})

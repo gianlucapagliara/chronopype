@@ -4,6 +4,9 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validat
 
 from chronopype.clocks.modes import ClockMode
 
+FLOAT_EPSILON: float = 1e-10
+"""Tolerance for floating-point comparison in timestamp arithmetic."""
+
 
 class ClockConfig(BaseModel):
     """Configuration for Clock initialization."""

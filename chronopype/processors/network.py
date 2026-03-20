@@ -28,6 +28,7 @@ class NetworkProcessor(TickProcessor):
         self._check_network_timeout = 5.0
         self._network_error_wait_time = 60.0
         self._check_network_task: asyncio.Task[None] | None = None
+        self._stop_network_task: asyncio.Task[None] | None = None
         self._min_backoff = 1.0
         self._max_backoff = 300.0  # 5 minutes
         self._backoff_factor = 2.0
@@ -184,9 +185,32 @@ class NetworkProcessor(TickProcessor):
             self._check_network_task.cancel()
             self._check_network_task = None
         self._network_status = NetworkStatus.DISCONNECTING
-        asyncio.create_task(self.stop_network())
+        self._stop_network_task = asyncio.create_task(self._safe_stop_network())
         self._network_status = NetworkStatus.STOPPED
         super().stop()
+
+    async def _safe_stop_network(self) -> None:
+        """Wrapper around stop_network() that catches exceptions."""
+        try:
+            await self.stop_network()
+        except Exception:
+            pass  # Best-effort cleanup
+
+    async def await_cleanup(self, timeout: float = 5.0) -> None:
+        """Await pending cleanup tasks (e.g., stop_network).
+
+        Call this after stop() to ensure network resources are fully released.
+
+        Args:
+            timeout: Maximum seconds to wait for cleanup to complete.
+        """
+        if self._stop_network_task is not None:
+            try:
+                await asyncio.wait_for(self._stop_network_task, timeout=timeout)
+            except (TimeoutError, asyncio.CancelledError):
+                self._stop_network_task.cancel()
+            finally:
+                self._stop_network_task = None
 
     def tick(self, timestamp: float) -> None:
         """Override this method to implement synchronous tick processing"""

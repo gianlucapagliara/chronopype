@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -13,6 +14,8 @@ from chronopype.clocks.modes import ClockMode
 from chronopype.exceptions import ClockContextError, ClockError, ProcessorTimeoutError
 from chronopype.processors.base import TickProcessor
 from chronopype.processors.models import ProcessorState
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,6 +75,12 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
     ) -> None:
         """Initialize a new Clock instance."""
         MultiPublisher.__init__(self)  # Initialize MultiPublisher
+        logger.debug(
+            "Initializing %s (mode=%s, tick_size=%s)",
+            type(self).__name__,
+            config.clock_mode.name,
+            config.tick_size,
+        )
 
         self._config = config
         self._tick_counter = 0
@@ -163,6 +172,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if not self._running and not self._started:
             return
 
+        logger.info("Shutting down clock after %d ticks", self._tick_counter)
         self._running = False
         self._started = False
         self._shutdown_event.set()
@@ -200,6 +210,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         if processor in self._processors:
             raise ClockError("Processor already registered")
 
+        logger.debug("Adding processor %s", processor)
         self._processors.append(processor)
         self._processor_states[processor] = ProcessorState(
             last_timestamp=self._current_tick,
@@ -228,6 +239,7 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         """Remove a processor from the clock."""
         if processor not in self._processors:
             raise ClockError("Processor not registered")
+        logger.debug("Removing processor %s", processor)
 
         # Stop the processor if it's active
         state = self._processor_states[processor]
@@ -311,9 +323,14 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                         f"Processor execution timed out after {self._config.processor_timeout}s"
                     )
                     last_error = error
-                    # Don't raise the error immediately, let the retry logic handle it
                     retry_count += 1
                     max_consecutive_retries = max(max_consecutive_retries, retry_count)
+                    logger.warning(
+                        "Processor %s timed out (retry %d/%d)",
+                        processor,
+                        retry_count,
+                        self._config.max_retries,
+                    )
                     if retry_count <= self._config.max_retries:
                         await asyncio.sleep(0.1 * (2 ** (retry_count - 1)))
                         continue
@@ -321,11 +338,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
 
                 execution_time = time.perf_counter() - start_time
 
-                # Update execution time stats
-                execution_times = list(state.execution_times)
+                # Update execution time stats with windowed list
+                window = self._config.stats_window_size
+                if len(state.execution_times) >= window:
+                    execution_times = list(state.execution_times[-(window - 1) :])
+                else:
+                    execution_times = list(state.execution_times)
                 execution_times.append(execution_time)
-                if len(execution_times) > self._config.stats_window_size:
-                    execution_times.pop(0)
 
                 # Update processor state after successful execution
                 self._processor_states[processor] = state.model_copy(
@@ -349,6 +368,13 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                 last_error = e
                 retry_count += 1
                 max_consecutive_retries = max(max_consecutive_retries, retry_count)
+                logger.warning(
+                    "Processor %s error (retry %d/%d): %s",
+                    processor,
+                    retry_count,
+                    self._config.max_retries,
+                    e,
+                )
 
                 if retry_count <= self._config.max_retries:
                     await asyncio.sleep(0.1 * (2 ** (retry_count - 1)))
@@ -356,7 +382,12 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                     break
 
         if last_error:
-            # Update processor state with error
+            logger.error(
+                "Processor %s failed after %d retries: %s",
+                processor,
+                retry_count,
+                last_error,
+            )
             self._processor_states[processor] = state.model_copy(
                 update={
                     "error_count": state.error_count + 1,
@@ -370,34 +401,105 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             )
             raise last_error
 
-    def _cleanup(self, error_occurred: bool = False) -> None:
-        """Clean up the clock state."""
-        # Reset all processor states while preserving error information
-        for processor in self._processors:
-            state = self._processor_states[processor]
-            self._processor_states[processor] = state.model_copy(
-                update={
-                    "is_active": False,
-                    "retry_count": 0,
-                    "consecutive_errors": 0,
-                }
+    async def _execute_tick(self, processors: list[TickProcessor]) -> None:
+        """Execute a tick for all processors.
+
+        Handles both concurrent and sequential execution based on config.
+        Publishes a ClockTickEvent after all processors have been executed.
+        """
+        self._tick_counter += 1
+
+        if self._config.concurrent_processors:
+            tasks = [
+                asyncio.create_task(
+                    self._execute_processor(processor, self._current_tick)
+                )
+                for processor in processors
+            ]
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            errors: list[Exception] = []
+
+            for processor, result in zip(processors, results, strict=False):
+                if isinstance(result, Exception):
+                    if self._error_callback:
+                        self._error_callback(processor, result)
+                    errors.append(result)
+                else:
+                    state = self._processor_states[processor]
+                    self._processor_states[processor] = state.model_copy(
+                        update={"last_timestamp": self._current_tick}
+                    )
+
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
             )
 
-        # If an error occurred, mark the clock as running to prevent re-entry
-        if error_occurred:
-            self._running = True
+            if errors:
+                raise errors[0]
         else:
-            self._running = False
+            for processor in processors:
+                try:
+                    await self._execute_processor(processor, self._current_tick)
+                    state = self._processor_states[processor]
+                    self._processor_states[processor] = state.model_copy(
+                        update={"last_timestamp": self._current_tick}
+                    )
+                except Exception as e:
+                    if self._error_callback:
+                        self._error_callback(processor, e)
+                    raise
 
-        self._current_context = None
+            self.publish(
+                self.tick_publication,
+                ClockTickEvent(
+                    timestamp=self._current_tick,
+                    tick_counter=self._tick_counter,
+                    processors=self.get_active_processors(),
+                ),
+            )
+
+    def _cleanup(self, error_occurred: bool = False) -> None:
+        """Clean up the clock state.
+
+        Resets all internal state so the clock can be reused after errors.
+        Processor error information (error_count, last_error, etc.) is preserved
+        across cleanup for diagnostics.
+        """
+        # Reset all processor states while preserving error information
+        for processor in self._processors:
+            state = self._processor_states.get(processor)
+            if state is not None:
+                self._processor_states[processor] = state.model_copy(
+                    update={
+                        "is_active": False,
+                        "retry_count": 0,
+                        "consecutive_errors": 0,
+                    }
+                )
+
+        # Always fully reset clock state so it can be reused
+        self._running = False
         self._started = False
+        self._current_context = None
         self._task = None
+        self._shutdown_event.clear()
 
     async def __aenter__(self) -> "BaseClock":
         """Enter the clock context."""
         if self._current_context is not None or self._running or self._started:
             raise ClockContextError("Clock is already in a context or running")
 
+        logger.info(
+            "Starting clock context (mode=%s, processors=%d)",
+            self._config.clock_mode.name,
+            len(self._processors),
+        )
         try:
             self._current_context = []
             self._started = True
@@ -482,7 +584,14 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
                         )
                     except Exception:
                         error_occurred = True
-                        pass  # Ignore errors during cleanup
+
+                # Await cleanup for processors that need async teardown
+                for processor in self._current_context:
+                    if hasattr(processor, "await_cleanup"):
+                        try:
+                            await processor.await_cleanup()
+                        except Exception:
+                            pass
 
             self._cleanup(error_occurred=error_occurred)
 
