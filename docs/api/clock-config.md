@@ -34,8 +34,7 @@ class ClockConfig(BaseModel):
 ## Example
 
 ```python
-from chronopype.clocks import ClockMode
-from chronopype.clocks.config import ClockConfig
+from chronopype import ClockConfig, ClockMode
 
 config = ClockConfig(
     clock_mode=ClockMode.BACKTEST,

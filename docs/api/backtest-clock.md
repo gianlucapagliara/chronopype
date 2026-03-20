@@ -64,9 +64,9 @@ await clock.fast_forward(3600.0)  # advance 1 hour
 
 ```python
 import asyncio
-from chronopype.clocks import BacktestClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.base import TickProcessor
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import BacktestClock
+from chronopype.processors import TickProcessor
 
 
 class StrategyProcessor(TickProcessor):

@@ -36,9 +36,9 @@ Run the clock until `target_time` is reached. The target is interpreted relative
 ```python
 import asyncio
 import time
-from chronopype.clocks import RealtimeClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.base import TickProcessor
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import RealtimeClock
+from chronopype.processors import TickProcessor
 
 
 class HeartbeatProcessor(TickProcessor):

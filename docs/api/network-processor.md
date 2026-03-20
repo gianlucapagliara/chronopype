@@ -90,7 +90,7 @@ When reconnecting, the processor uses exponential backoff with jitter:
 
 ```python
 import logging
-from chronopype.processors.network import NetworkProcessor, NetworkStatus
+from chronopype.processors import NetworkProcessor, NetworkStatus
 
 
 class DatabaseProcessor(NetworkProcessor):

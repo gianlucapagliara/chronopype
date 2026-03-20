@@ -67,7 +67,7 @@ Record an error occurrence. Called automatically by the clock.
 ## Example
 
 ```python
-from chronopype.processors.base import TickProcessor
+from chronopype.processors import TickProcessor
 
 
 class DataCollector(TickProcessor):

@@ -22,7 +22,7 @@ class ClockMode(Enum):
 ## Usage
 
 ```python
-from chronopype.clocks import ClockMode
+from chronopype import ClockMode
 
 mode = ClockMode.REALTIME
 

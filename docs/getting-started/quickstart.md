@@ -7,7 +7,7 @@ This guide walks through the basics of chronopype: creating a processor, configu
 A processor defines work that runs on each clock tick. Create one by subclassing `TickProcessor`:
 
 ```python
-from chronopype.processors.base import TickProcessor
+from chronopype.processors import TickProcessor
 
 
 class PrintProcessor(TickProcessor):
@@ -23,8 +23,7 @@ Every clock requires a `ClockConfig`:
 
 ```python
 import time
-from chronopype.clocks import ClockMode
-from chronopype.clocks.config import ClockConfig
+from chronopype import ClockConfig, ClockMode
 
 config = ClockConfig(
     clock_mode=ClockMode.REALTIME,
@@ -42,9 +41,9 @@ Use the clock as an async context manager, add processors, and run:
 ```python
 import asyncio
 import time
-from chronopype.clocks import RealtimeClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.base import TickProcessor
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import RealtimeClock
+from chronopype.processors import TickProcessor
 
 
 class PrintProcessor(TickProcessor):
@@ -73,9 +72,9 @@ For backtesting, use `BacktestClock` with a defined time range:
 
 ```python
 import asyncio
-from chronopype.clocks import BacktestClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.base import TickProcessor
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import BacktestClock
+from chronopype.processors import TickProcessor
 
 
 class DataProcessor(TickProcessor):

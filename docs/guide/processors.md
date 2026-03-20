@@ -7,7 +7,7 @@ Processors define the work that executes on each clock tick. They are the primar
 Subclass `TickProcessor` and override `async_tick` (or `tick` for synchronous work):
 
 ```python
-from chronopype.processors.base import TickProcessor
+from chronopype.processors import TickProcessor
 
 
 class MyProcessor(TickProcessor):

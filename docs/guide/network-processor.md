@@ -8,7 +8,7 @@ Subclass `NetworkProcessor` and implement the required abstract methods:
 
 ```python
 import logging
-from chronopype.processors.network import NetworkProcessor, NetworkStatus
+from chronopype.processors import NetworkProcessor, NetworkStatus
 
 
 class ApiProcessor(NetworkProcessor):
@@ -136,9 +136,9 @@ STOPPED ──start()──> NOT_CONNECTED
 ```python
 import asyncio
 import logging
-from chronopype.clocks import RealtimeClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.network import NetworkProcessor, NetworkStatus
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import RealtimeClock
+from chronopype.processors import NetworkProcessor, NetworkStatus
 
 
 class WebSocketProcessor(NetworkProcessor):

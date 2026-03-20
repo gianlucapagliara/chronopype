@@ -31,7 +31,7 @@ Chronopype has minimal dependencies:
 ```python
 import chronopype
 from chronopype.clocks import RealtimeClock, BacktestClock
-from chronopype.processors.base import TickProcessor
+from chronopype.processors import TickProcessor
 
 print("chronopype installed successfully")
 ```

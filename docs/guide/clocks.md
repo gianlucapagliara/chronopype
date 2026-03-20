@@ -18,8 +18,7 @@ Both share the same `BaseClock` interface, so processors work identically in eit
 All clocks are configured via `ClockConfig`:
 
 ```python
-from chronopype.clocks import ClockMode
-from chronopype.clocks.config import ClockConfig
+from chronopype import ClockConfig, ClockMode
 
 config = ClockConfig(
     clock_mode=ClockMode.REALTIME,
@@ -66,8 +65,8 @@ The realtime clock synchronizes with wall-clock time and handles drift:
 
 ```python
 import time
-from chronopype.clocks import RealtimeClock, ClockMode
-from chronopype.clocks.config import ClockConfig
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import RealtimeClock
 
 config = ClockConfig(
     clock_mode=ClockMode.REALTIME,
@@ -92,8 +91,8 @@ async with RealtimeClock(config) as clock:
 The backtest clock steps through a defined time range deterministically:
 
 ```python
-from chronopype.clocks import BacktestClock, ClockMode
-from chronopype.clocks.config import ClockConfig
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import BacktestClock
 
 config = ClockConfig(
     clock_mode=ClockMode.BACKTEST,

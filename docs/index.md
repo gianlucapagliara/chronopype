@@ -23,9 +23,9 @@ A flexible, type-safe clock implementation for real-time and backtesting scenari
 ```python
 import asyncio
 import time
-from chronopype.clocks import RealtimeClock, ClockMode
-from chronopype.clocks.config import ClockConfig
-from chronopype.processors.base import TickProcessor
+from chronopype import ClockConfig, ClockMode
+from chronopype.clocks import RealtimeClock
+from chronopype.processors import TickProcessor
 
 
 class MyProcessor(TickProcessor):
