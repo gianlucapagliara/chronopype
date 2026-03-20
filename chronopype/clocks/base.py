@@ -371,27 +371,30 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
             raise last_error
 
     def _cleanup(self, error_occurred: bool = False) -> None:
-        """Clean up the clock state."""
+        """Clean up the clock state.
+
+        Resets all internal state so the clock can be reused after errors.
+        Processor error information (error_count, last_error, etc.) is preserved
+        across cleanup for diagnostics.
+        """
         # Reset all processor states while preserving error information
         for processor in self._processors:
-            state = self._processor_states[processor]
-            self._processor_states[processor] = state.model_copy(
-                update={
-                    "is_active": False,
-                    "retry_count": 0,
-                    "consecutive_errors": 0,
-                }
-            )
+            state = self._processor_states.get(processor)
+            if state is not None:
+                self._processor_states[processor] = state.model_copy(
+                    update={
+                        "is_active": False,
+                        "retry_count": 0,
+                        "consecutive_errors": 0,
+                    }
+                )
 
-        # If an error occurred, mark the clock as running to prevent re-entry
-        if error_occurred:
-            self._running = True
-        else:
-            self._running = False
-
-        self._current_context = None
+        # Always fully reset clock state so it can be reused
+        self._running = False
         self._started = False
+        self._current_context = None
         self._task = None
+        self._shutdown_event.clear()
 
     async def __aenter__(self) -> "BaseClock":
         """Enter the clock context."""

@@ -64,7 +64,7 @@ def test_context_manager_errors(clock_fixture: str, request: Any) -> None:
 
     asyncio.run(test_nested())
 
-    # Test re-entry after error
+    # Test re-entry after error - clock should be reusable
     async def test_reentry() -> None:
         try:
             async with clock:
@@ -72,17 +72,13 @@ def test_context_manager_errors(clock_fixture: str, request: Any) -> None:
         except ValueError:
             pass  # Expected error
 
-        with pytest.raises(ClockContextError):
-            async with clock:
-                pass  # Should raise because context is not properly cleaned up
+        # Clock should be reusable after error cleanup
+        async with clock:
+            pass  # Should succeed - context was properly cleaned up
 
     asyncio.run(test_reentry())
 
-    # Reset the clock state
-    clock._current_context = None
-    clock._running = False
-
-    # Test running flag
+    # Test running flag prevents re-entry
     clock._running = True
 
     async def test_running() -> None:
@@ -91,6 +87,9 @@ def test_context_manager_errors(clock_fixture: str, request: Any) -> None:
                 pass
 
     asyncio.run(test_running())
+
+    # Reset for subsequent tests
+    clock._running = False
 
 
 @pytest.mark.parametrize("clock_fixture", ["clock", "realtime_clock"])
