@@ -1,7 +1,6 @@
 """Tests for ClockRuntime."""
 
 import asyncio
-import threading
 
 import pytest
 from pydantic import ValidationError
@@ -15,7 +14,6 @@ from chronopype.runtime.clock_runtime import ClockRuntime
 from chronopype.runtime.config import ClockRuntimeConfig
 
 from ..conftest import MockProcessor
-
 
 # ---------------------------------------------------------------------------
 # Config tests
