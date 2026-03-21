@@ -16,12 +16,15 @@ from chronopype.clocks.realtime import RealtimeClock
 from chronopype.exceptions import (
     ClockContextError,
     ClockError,
+    ClockRuntimeError,
     ProcessorError,
     ProcessorTimeoutError,
 )
 from chronopype.processors.base import TickProcessor
 from chronopype.processors.models import ProcessorState
 from chronopype.processors.network import NetworkProcessor, NetworkStatus
+from chronopype.runtime.clock_runtime import ClockRuntime
+from chronopype.runtime.config import ClockRuntimeConfig
 from chronopype.time import Time, TimestampFormat
 
 try:
@@ -47,9 +50,13 @@ __all__ = [
     "ProcessorStats",
     "NetworkProcessor",
     "NetworkStatus",
+    # Runtime
+    "ClockRuntime",
+    "ClockRuntimeConfig",
     # Exceptions
     "ClockError",
     "ClockContextError",
+    "ClockRuntimeError",
     "ProcessorError",
     "ProcessorTimeoutError",
     # Time utilities

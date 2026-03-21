@@ -20,3 +20,9 @@ class ProcessorTimeoutError(ProcessorError):
     """Raised when a processor execution times out."""
 
     pass
+
+
+class ClockRuntimeError(ClockError):
+    """Raised when a clock runtime operation fails."""
+
+    pass
