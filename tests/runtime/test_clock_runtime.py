@@ -152,9 +152,7 @@ class TestClockRuntimeBacktest:
         await rt.stop()
         assert rt.is_running is False
 
-    async def test_context_manager(
-        self, backtest_config: ClockRuntimeConfig
-    ) -> None:
+    async def test_context_manager(self, backtest_config: ClockRuntimeConfig) -> None:
         async with ClockRuntime(config=backtest_config) as rt:
             assert rt.is_running is True
         assert rt.is_running is False
@@ -186,9 +184,7 @@ class TestClockRuntimeBacktest:
         with pytest.raises(ClockRuntimeError, match="BacktestClock"):
             await rt.backtest_til(100.0)
 
-    async def test_start_idempotent(
-        self, backtest_config: ClockRuntimeConfig
-    ) -> None:
+    async def test_start_idempotent(self, backtest_config: ClockRuntimeConfig) -> None:
         rt = ClockRuntime(config=backtest_config)
         await rt.start()
         await rt.start()  # should not raise
@@ -203,9 +199,7 @@ class TestClockRuntimeBacktest:
 
 class TestClockRuntimeRealtime:
     async def test_start_creates_task(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.1
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.1)
         rt = ClockRuntime(config=cfg)
         await rt.start()
         assert rt.is_running is True
@@ -213,9 +207,7 @@ class TestClockRuntimeRealtime:
         await rt.stop()
 
     async def test_stop_cancels_task(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.1
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.1)
         rt = ClockRuntime(config=cfg)
         await rt.start()
         await rt.stop()
@@ -223,9 +215,7 @@ class TestClockRuntimeRealtime:
         assert rt.is_running is False
 
     async def test_context_manager(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.1
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.1)
         async with ClockRuntime(config=cfg) as rt:
             assert rt.is_running is True
         assert rt.is_running is False
@@ -238,9 +228,7 @@ class TestClockRuntimeRealtime:
 
 class TestClockRuntimeThreaded:
     def test_start_threaded_creates_thread(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         rt.start_threaded()
         assert rt._clock_thread is not None
@@ -249,9 +237,7 @@ class TestClockRuntimeThreaded:
         rt.stop_threaded()
 
     def test_stop_threaded_joins_thread(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         rt.start_threaded()
         rt.stop_threaded()
@@ -270,9 +256,7 @@ class TestClockRuntimeThreaded:
             rt.start_threaded()
 
     def test_start_threaded_idempotent(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         rt.start_threaded()
         thread = rt._clock_thread
@@ -281,9 +265,7 @@ class TestClockRuntimeThreaded:
         rt.stop_threaded()
 
     def test_get_clock_loop_in_threaded_mode(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         rt.start_threaded()
         # Give the thread a moment to set up the event loop
@@ -296,9 +278,7 @@ class TestClockRuntimeThreaded:
         rt.stop_threaded()
 
     def test_get_clock_loop_none_after_stop(self) -> None:
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         rt.start_threaded()
         rt.stop_threaded()
@@ -306,9 +286,7 @@ class TestClockRuntimeThreaded:
 
     def test_error_callback_called_on_failure(self) -> None:
         """Verify error callback fires when the clock thread encounters an error."""
-        cfg = ClockRuntimeConfig(
-            clock_mode=ClockMode.REALTIME, tick_size=0.5
-        )
+        cfg = ClockRuntimeConfig(clock_mode=ClockMode.REALTIME, tick_size=0.5)
         rt = ClockRuntime(config=cfg)
         errors: list[str] = []
         rt.start_threaded(on_error_callback=lambda msg: errors.append(msg))

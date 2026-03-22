@@ -38,9 +38,7 @@ def start_clock_thread(
         asyncio.set_event_loop(loop)
         runtime._clock_loop_ref = loop
         try:
-            loop.run_until_complete(
-                _clock_loop(clock, stop_event, poll_interval)
-            )
+            loop.run_until_complete(_clock_loop(clock, stop_event, poll_interval))
         except Exception as exc:
             logger.exception("Clock thread error")
             if on_error_callback is not None:
@@ -241,9 +239,7 @@ class ClockRuntime:
         if self._stop_event is not None:
             self._stop_event.set()
         if self._clock_thread is not None:
-            self._clock_thread.join(
-                timeout=self._config.thread_stop_timeout_seconds
-            )
+            self._clock_thread.join(timeout=self._config.thread_stop_timeout_seconds)
             self._clock_thread = None
         self._stop_event = None
         self._clock_loop_ref = None
