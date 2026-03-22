@@ -61,6 +61,7 @@ BaseClock(
 | `current_timestamp` | `float` | Current clock timestamp |
 | `tick_counter` | `int` | Number of ticks processed |
 | `processor_states` | `dict[TickProcessor, ProcessorState]` | Copy of all processor states |
+| `is_in_context` | `bool` | Whether the clock is currently inside an async context |
 
 ## Processor Management
 
@@ -68,7 +69,7 @@ BaseClock(
 
 Add a processor to the clock. If the clock is already in context, `start()` is called on the processor immediately.
 
-**Raises:** `ClockError` if the processor is already registered or fails to start.
+**Raises:** `ClockError` if the processor is already registered, already belongs to another clock, or fails to start.
 
 ### `remove_processor(processor)`
 
@@ -78,13 +79,13 @@ Remove a processor from the clock. Calls `stop()` on the processor.
 
 ### `pause_processor(processor)`
 
-Pause a processor. It remains registered but is skipped during tick execution.
+Pause a processor. It remains registered but is skipped during tick execution. Calls `processor.pause()` to allow processors with background tasks (e.g., `NetworkProcessor`) to suspend them.
 
 **Raises:** `ClockError` if the processor is not registered.
 
 ### `resume_processor(processor)`
 
-Resume a paused processor.
+Resume a paused processor. Calls `processor.resume()` to allow processors with background tasks to restart them.
 
 **Raises:** `ClockError` if the processor is not registered.
 
@@ -117,7 +118,10 @@ Run the clock until `target_time` is reached.
 
 ### `shutdown(timeout=None)`
 
-Shutdown the clock and stop all processors. If `timeout` is provided, waits up to that many seconds.
+Shutdown the clock and stop all processors. Awaits async cleanup for processors that support it (e.g., `NetworkProcessor`).
+
+!!! note
+    The `timeout` parameter is accepted but currently unused.
 
 ## Performance
 
@@ -127,7 +131,7 @@ Returns a tuple `(avg_time, std_dev, p95)` for the processor's execution times.
 
 ### `get_processor_stats(processor)`
 
-Returns a detailed statistics dictionary. See [Performance Monitoring](../guide/performance.md) for the full list of keys.
+Returns a `ProcessorStats` typed dictionary with detailed statistics, or `None` if the processor is not registered. See [Performance Monitoring](../guide/performance.md) for the full list of keys.
 
 ## Context Manager
 

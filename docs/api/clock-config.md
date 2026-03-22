@@ -6,6 +6,12 @@
 
 **Module:** `chronopype.clocks.config`
 
+## Module Constants
+
+| Constant | Type | Value | Description |
+|----------|------|-------|-------------|
+| `FLOAT_EPSILON` | `float` | `1e-10` | Tolerance for floating-point comparison in timestamp arithmetic |
+
 ## Definition
 
 ```python
@@ -22,9 +28,9 @@ class ClockConfig(BaseModel):
 | `start_time` | `float` | `0.0` | Start time as UNIX timestamp |
 | `end_time` | `float` | `0.0` | End time as UNIX timestamp. `0` means no end. Required > 0 for `BACKTEST` mode |
 | `processor_timeout` | `float` | `1.0` | Maximum seconds allowed per processor execution |
-| `max_retries` | `int` | `3` | Number of retries for failed processor executions |
+| `max_retries` | `int` | `3` | Number of retries for failed processor executions. Must be >= 0 |
 | `concurrent_processors` | `bool` | `False` | Run processors concurrently via `asyncio.gather` |
-| `stats_window_size` | `int` | `100` | Rolling window size for execution time statistics |
+| `stats_window_size` | `int` | `100` | Rolling window size for execution time statistics. Must be > 0 and <= 10000 |
 
 ## Validation
 

@@ -48,7 +48,7 @@ Returns `0.0` if no execution times have been recorded.
 
 ### `update_execution_time(execution_time, window_size)`
 
-Returns a new `ProcessorState` with the execution time appended. Maintains the rolling window by trimming oldest entries. Resets `consecutive_errors` and `retry_count` on success.
+Returns a new `ProcessorState` with the execution time appended. Maintains the rolling window by trimming oldest entries. Resets `consecutive_errors` on success (note: `retry_count` is reset separately via `reset_retries()`).
 
 ### `record_error(error, timestamp)`
 

@@ -24,7 +24,7 @@ Chronopype has minimal dependencies:
 | Package | Version | Purpose |
 |---------|---------|---------|
 | [pydantic](https://docs.pydantic.dev/) | >= 2.10.4 | Configuration and state validation |
-| [eventspype](https://github.com/gianlucapagliara/eventspype) | >= 1.0.1 | Event publication framework |
+| [eventspype](https://github.com/gianlucapagliara/eventspype) | >= 1.1.0 | Event publication framework |
 
 ## Verify Installation
 

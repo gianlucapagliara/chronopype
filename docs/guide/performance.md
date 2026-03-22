@@ -29,19 +29,20 @@ The returned dictionary contains:
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `execution_times` | `list[float]` | Rolling window of execution times |
+| `total_ticks` | `int` | Total tick attempts |
+| `successful_ticks` | `int` | Successful executions |
+| `failed_ticks` | `int` | Failed executions |
 | `error_count` | `int` | Total errors encountered |
 | `consecutive_errors` | `int` | Current consecutive error streak |
 | `retry_count` | `int` | Current retry count |
 | `max_consecutive_retries` | `int` | Highest retry streak observed |
+| `avg_execution_time` | `float` | Average execution time |
+| `max_execution_time` | `float` | Maximum execution time |
+| `std_dev_execution_time` | `float` | Standard deviation of execution times |
+| `error_rate` | `float` | Error percentage (`error_count / total_ticks * 100`) |
 | `last_error` | `str \| None` | Most recent error message |
 | `last_error_time` | `datetime \| None` | When the last error occurred |
 | `last_success_time` | `datetime \| None` | When the last success occurred |
-| `total_ticks` | `int` | Total tick attempts |
-| `successful_ticks` | `int` | Successful executions |
-| `failed_ticks` | `int` | Failed executions |
-| `avg_execution_time` | `float` | Average execution time |
-| `max_execution_time` | `float` | Maximum execution time |
 
 ## Detecting Lagging Processors
 

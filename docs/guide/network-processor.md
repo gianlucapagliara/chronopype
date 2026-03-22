@@ -54,7 +54,7 @@ class ApiProcessor(NetworkProcessor):
 |--------|---------|---------|
 | `start_network()` | Setup when connection is established | No-op |
 | `stop_network()` | Cleanup when disconnecting | No-op |
-| `on_connected()` | Callback on `CONNECTED` transition | Logs info |
+| `on_connected()` | Callback on `CONNECTED` transition | Logs info, records connection timestamp |
 | `on_disconnected()` | Callback on disconnect from `CONNECTED` | Logs info |
 | `tick(timestamp)` | Synchronous tick processing | No-op |
 | `async_tick(timestamp)` | Async tick processing | Calls `tick()` |
@@ -89,7 +89,7 @@ The network processor runs a background loop that periodically checks connectivi
 - **Backoff**: Exponential with jitter, min 1s, max 5 minutes
 - **Error wait**: 60 seconds for unexpected errors (configurable)
 
-The jitter is +/-20% to avoid thundering herd problems when multiple processors reconnect simultaneously.
+The jitter is +/-10% to avoid thundering herd problems when multiple processors reconnect simultaneously.
 
 ## Configuration
 

@@ -43,6 +43,7 @@ nav:
           - BaseClock: api/base-clock.md
           - RealtimeClock: api/realtime-clock.md
           - BacktestClock: api/backtest-clock.md
+          - ProcessorStats: api/processor-stats.md
       - Runtime:
           - ClockRuntime: api/clock-runtime.md
           - ClockRuntimeConfig: api/clock-runtime-config.md

@@ -27,9 +27,9 @@ Cancel via `asyncio.Task.cancel()` or by exiting the context manager.
 
 ### `run_til(target_time)`
 
-Run the clock until `target_time` is reached. The target is interpreted relative to the current wall-clock time.
+Run the clock until `target_time` is reached. The target is in the clock's timestamp domain; internally the clock calculates the wall-clock duration as `target_time - current_tick` and runs for that duration.
 
-**Raises:** `ClockError` if the clock is already running.
+**Raises:** `ClockError` if the clock is already running or not in a context.
 
 ## Example
 

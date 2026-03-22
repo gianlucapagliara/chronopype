@@ -74,23 +74,38 @@ chronopype/
 │   │   ├── base.py            # BaseClock abstract class
 │   │   ├── realtime.py        # RealtimeClock implementation
 │   │   └── backtest.py        # BacktestClock implementation
-│   └── processors/
+│   ├── processors/
+│   │   ├── __init__.py
+│   │   ├── base.py            # TickProcessor base class
+│   │   ├── models.py          # ProcessorState model
+│   │   └── network.py         # NetworkProcessor abstract class
+│   └── runtime/
 │       ├── __init__.py
-│       ├── base.py            # TickProcessor base class
-│       ├── models.py          # ProcessorState model
-│       └── network.py         # NetworkProcessor abstract class
+│       ├── config.py          # ClockRuntimeConfig model
+│       └── clock_runtime.py   # ClockRuntime lifecycle management
 ├── tests/
 │   ├── conftest.py
 │   ├── test_models.py
+│   ├── test_time.py
+│   ├── test_coverage_misc.py
 │   ├── clocks/
 │   │   ├── test_base.py
+│   │   ├── test_base_coverage.py
 │   │   ├── test_realtime.py
+│   │   ├── test_realtime_coverage.py
 │   │   ├── test_backtest.py
+│   │   ├── test_backtest_coverage.py
+│   │   ├── test_concurrent.py
+│   │   ├── test_dynamic_processors.py
 │   │   ├── test_errors.py
+│   │   ├── test_events.py
 │   │   └── test_performance.py
-│   └── processors/
-│       ├── test_base.py
-│       └── test_network.py
+│   ├── processors/
+│   │   ├── test_base.py
+│   │   ├── test_coverage.py
+│   │   └── test_network.py
+│   └── runtime/
+│       └── test_clock_runtime.py
 ├── docs/                      # Documentation (mkdocs)
 ├── scripts/
 │   └── release.sh             # Release automation

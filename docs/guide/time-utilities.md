@@ -62,22 +62,20 @@ Works with `int`, `float`, and `str` inputs.
 
 ## Converting Timestamps
 
-Convert between timestamp formats:
+Convert between timestamp formats. All inputs are converted to `float` internally, and the result is always returned as `float`:
 
 ```python
 from chronopype import TimestampFormat
 
 # Seconds to milliseconds
 ms = TimestampFormat.convert_ts(1700000000, TimestampFormat.MILLISECONDS)
-# Result: 1700000000000
+# Result: 1700000000000.0
 
 # Milliseconds to seconds
 sec = TimestampFormat.convert_ts(1700000000000, TimestampFormat.SECONDS)
-# Result: 1700000000
+# Result: 1700000000.0
 
-# Preserves input type (str in = str out)
+# String inputs are also converted to float
 result = TimestampFormat.convert_ts("1700000000", TimestampFormat.MILLISECONDS)
-# Result: "1700000000000"
+# Result: 1700000000000.0
 ```
-
-The conversion preserves the input type: if you pass a `str`, you get a `str` back; same for `int` and `float`.

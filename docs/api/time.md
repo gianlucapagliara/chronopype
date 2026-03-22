@@ -24,7 +24,7 @@ An enum identifying timestamp precision by digit count.
 
 | Value | Digits | Example |
 |-------|--------|---------|
-| `SECONDS` | 10 | `1700000000` |
+| `SECONDS` | ≤10 | `1700000000` |
 | `MILLISECONDS` | 13 | `1700000000000` |
 | `MICROSECONDS` | 16 | `1700000000000000` |
 | `NANOSECONDS` | 19 | `1700000000000000000` |
@@ -50,23 +50,23 @@ TimestampFormat.get_format(1700000000000)    # MILLISECONDS
 
 ### `TimestampFormat.convert_ts(timestamp, out_format)`
 
-Convert a timestamp between formats. Preserves the input type.
+Convert a timestamp between formats. All inputs are converted to `float` internally, and the result is always returned as `float`.
 
 ```python
 TimestampFormat.convert_ts(1700000000, TimestampFormat.MILLISECONDS)
-# Returns: 1700000000000 (int)
+# Returns: 1700000000000.0
 
-TimestampFormat.convert_ts("1700000000", TimestampFormat.MILLISECONDS)
-# Returns: "1700000000000" (str)
+TimestampFormat.convert_ts(1700000000000, TimestampFormat.SECONDS)
+# Returns: 1700000000.0
 ```
 
 **Parameters:**
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `timestamp` | `str \| int \| float` | Input timestamp |
+| `timestamp` | `str \| int \| float` | Input timestamp (converted to float internally) |
 | `out_format` | `TimestampFormat` | Desired output format |
 
-**Returns:** `str | int | float` (same type as input)
+**Returns:** `float`
 
 **Raises:** `ValueError` if the input type or format is invalid.

@@ -31,7 +31,7 @@ Run the clock until `target_time` is reached. Creates an internal async task.
 
 ### `step(n=1)`
 
-Advance the clock by exactly `n` ticks. Returns the new current timestamp.
+Advance the clock by exactly `n` ticks. Returns the new current timestamp as `float`.
 
 ```python
 new_time = await clock.step()      # advance 1 tick
@@ -42,7 +42,7 @@ new_time = await clock.step(10)    # advance 10 ticks
 
 ### `step_to(target_time)`
 
-Advance the clock tick-by-tick until reaching `target_time`. Returns the new current timestamp.
+Advance the clock tick-by-tick until reaching `target_time`. Returns the new current timestamp as `float`.
 
 ```python
 new_time = await clock.step_to(1700001000.0)
@@ -52,7 +52,9 @@ new_time = await clock.step_to(1700001000.0)
 
 ### `fast_forward(seconds)`
 
-Fast forward the clock by the specified number of seconds, executing all intermediate ticks.
+Fast forward the clock by the specified number of seconds, executing all intermediate ticks. Delegates to `run_til()` internally, which creates an async task and sets the clock to "running" state.
+
+If `seconds <= 0`, returns immediately without executing any ticks.
 
 ```python
 await clock.fast_forward(3600.0)  # advance 1 hour

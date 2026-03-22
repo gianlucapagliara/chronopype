@@ -18,7 +18,7 @@ TickProcessor(stats_window_size: int = 100)
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `state` | `ProcessorState` | Current processor state (frozen Pydantic model) |
+| `state` | `ProcessorState` | Current processor state. Delegates to the clock-managed state when registered to a clock, otherwise returns the processor's own internal state |
 | `current_timestamp` | `float` | Last processed timestamp, or `0` if never called |
 
 ## Methods
@@ -50,19 +50,57 @@ Default implementation calls `tick(timestamp)`.
 
 ### `start(timestamp)`
 
-Called by the clock when the processor is started. Marks the processor as active.
+Called by the clock when the processor is started. Marks the processor as active and sets `last_timestamp`.
+
+```python
+def start(self, timestamp: float) -> None:
+    ...
+```
 
 ### `stop()`
 
 Called by the clock when the processor is stopped. Marks the processor as inactive.
 
+```python
+def stop(self) -> None:
+    ...
+```
+
+### `pause()`
+
+Pause the processor. Override for processors with background tasks (e.g., `NetworkProcessor`). Default is a no-op.
+
+```python
+def pause(self) -> None:
+    ...
+```
+
+### `resume()`
+
+Resume the processor. Override for processors with background tasks. Default is a no-op.
+
+```python
+def resume(self) -> None:
+    ...
+```
+
 ### `record_execution(execution_time)`
 
-Record a successful execution with its duration. Called automatically by the clock.
+Record a successful execution with its duration. Also resets `retry_count` via `reset_retries()`. Called automatically by the clock.
+
+```python
+def record_execution(self, execution_time: float) -> None:
+    ...
+```
 
 ### `record_error(error, timestamp)`
 
 Record an error occurrence. Called automatically by the clock.
+
+```python
+def record_error(self, error: Exception, timestamp: float) -> None:
+    ...
+```
 
 ## Example
 
