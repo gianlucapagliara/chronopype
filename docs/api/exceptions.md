@@ -8,6 +8,7 @@
 Exception
 └── ClockError
     ├── ClockContextError
+    ├── ClockRuntimeError
     └── ProcessorError
         └── ProcessorTimeoutError
 ```
@@ -37,6 +38,18 @@ Raised when the clock context manager is misused:
 - Entering context when already in context
 - Entering context when the clock is running
 - Performing operations that require context when not in context
+
+## ClockRuntimeError
+
+```python
+class ClockRuntimeError(ClockError)
+```
+
+Raised when a `ClockRuntime` operation fails:
+
+- Using `backtest_til()` on a non-backtest clock
+- Using `start_threaded()` on a non-realtime clock
+- Advancing past `end_time` without context
 
 ## ProcessorError
 

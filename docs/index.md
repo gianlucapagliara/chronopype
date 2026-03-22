@@ -55,9 +55,10 @@ Chronopype is organized around two core abstractions:
 - **Processors** implement the work that happens on each tick. The base `TickProcessor` handles sync/async execution, while `NetworkProcessor` adds connectivity management.
 
 ```
-BaseClock (abstract)
-├── RealtimeClock    ── real-time with drift correction
-└── BacktestClock    ── deterministic stepping through historical time
+ClockRuntime         ── lifecycle management (async + threaded)
+└── BaseClock (abstract)
+    ├── RealtimeClock    ── real-time with drift correction
+    └── BacktestClock    ── deterministic stepping through historical time
 
 TickProcessor (base)
 └── NetworkProcessor ── network-aware with auto-reconnection

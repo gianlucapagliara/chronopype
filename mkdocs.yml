@@ -31,6 +31,7 @@ nav:
       - Quick Start: getting-started/quickstart.md
   - User Guide:
       - Clocks: guide/clocks.md
+      - Runtime: guide/runtime.md
       - Processors: guide/processors.md
       - Network Processor: guide/network-processor.md
       - Performance Monitoring: guide/performance.md
@@ -42,6 +43,9 @@ nav:
           - BaseClock: api/base-clock.md
           - RealtimeClock: api/realtime-clock.md
           - BacktestClock: api/backtest-clock.md
+      - Runtime:
+          - ClockRuntime: api/clock-runtime.md
+          - ClockRuntimeConfig: api/clock-runtime-config.md
       - Processors:
           - TickProcessor: api/tick-processor.md
           - NetworkProcessor: api/network-processor.md

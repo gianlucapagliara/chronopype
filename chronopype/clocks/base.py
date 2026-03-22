@@ -154,6 +154,11 @@ class BaseClock(AsyncContextManager, MultiPublisher, ABC):
         return self._current_tick
 
     @property
+    def is_in_context(self) -> bool:
+        """True if the clock is currently inside an async context."""
+        return self._current_context is not None
+
+    @property
     def tick_counter(self) -> int:
         """Get the number of ticks processed."""
         return self._tick_counter

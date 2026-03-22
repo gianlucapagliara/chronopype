@@ -6,35 +6,22 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from chronopype.clocks.config import ClockConfig
 from chronopype.clocks.modes import ClockMode
 
 
 class ClockRuntimeConfig(BaseModel):
     """Configuration for ClockRuntime lifecycle management.
 
-    Contains both clock-level parameters (used to build a ``ClockConfig``
-    when no pre-built clock is provided) and runtime-level parameters
-    (thread timeouts, poll intervals).
+    Composes a ``ClockConfig`` for clock-level parameters and adds
+    runtime-level parameters (thread timeouts, poll intervals).
     """
 
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
 
-    clock_mode: ClockMode = Field(
-        default=ClockMode.REALTIME,
-        description="Clock mode (REALTIME or BACKTEST)",
-    )
-    tick_size: float = Field(
-        default=1.0,
-        gt=0,
-        description="Time interval of each tick in seconds",
-    )
-    start_time: float = Field(
-        default=0.0,
-        description="Start time in UNIX timestamp",
-    )
-    end_time: float = Field(
-        default=0.0,
-        description="End time in UNIX timestamp (0 for no end)",
+    clock_config: ClockConfig = Field(
+        default_factory=lambda: ClockConfig(clock_mode=ClockMode.REALTIME),
+        description="Clock configuration (mode, tick size, start/end time, etc.)",
     )
     thread_stop_timeout_seconds: float = Field(
         default=3.0,
@@ -46,3 +33,23 @@ class ClockRuntimeConfig(BaseModel):
         gt=0,
         description="Polling interval (seconds) for clock loop stop-event check",
     )
+
+    @property
+    def clock_mode(self) -> ClockMode:
+        """Shortcut for ``clock_config.clock_mode``."""
+        return self.clock_config.clock_mode
+
+    @property
+    def tick_size(self) -> float:
+        """Shortcut for ``clock_config.tick_size``."""
+        return self.clock_config.tick_size
+
+    @property
+    def start_time(self) -> float:
+        """Shortcut for ``clock_config.start_time``."""
+        return self.clock_config.start_time
+
+    @property
+    def end_time(self) -> float:
+        """Shortcut for ``clock_config.end_time``."""
+        return self.clock_config.end_time
