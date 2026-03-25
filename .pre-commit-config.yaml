@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run mypy --strict --cache-dir=.mypy_cache
+        entry: uv run mypy --strict --cache-dir=.mypy_cache chronopype
         language: system
         types: [python]
         pass_filenames: false

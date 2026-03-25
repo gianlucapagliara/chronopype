@@ -155,7 +155,7 @@ async def test_drift_logging(realtime_clock: RealtimeClock) -> None:
 
     assert len(debug_calls) == 1
     assert "Clock drift detected" in debug_calls[0][0]
-    assert "skipped" in debug_calls[0][0]
+    assert "caught up" in debug_calls[0][0]
 
 
 # run_til without context raises ClockError

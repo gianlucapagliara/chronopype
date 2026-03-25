@@ -84,7 +84,7 @@ async with RealtimeClock(config) as clock:
     # await clock.run()
 ```
 
-**Drift handling**: If a tick takes longer than `tick_size`, the next tick fires immediately to catch up. The clock tracks and compensates for accumulated drift.
+**Drift handling**: If a tick takes longer than `tick_size`, the next tick fires immediately to catch up. Processor timestamps are always aligned to tick boundaries regardless of wall-clock drift.
 
 ## BacktestClock
 

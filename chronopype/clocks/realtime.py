@@ -96,7 +96,7 @@ class RealtimeClock(BaseClock):
             await self._execute_tick(processors)
             await self._wait_next_tick()
 
-    async def _wait_next_tick(self) -> float:
+    async def _wait_next_tick(self) -> None:
         """Wait until the next tick."""
         current_time = time.time()
         next_tick = (
@@ -116,11 +116,12 @@ class RealtimeClock(BaseClock):
             ticks_passed = int((actual_time - next_tick) / self._config.tick_size)
             if ticks_passed > 0:
                 logger.debug(
-                    "Clock drift detected: skipped %d ticks (drift=%.3fs)",
+                    "Clock drift detected: caught up %d tick boundaries (drift=%.3fs)",
                     ticks_passed,
                     actual_time - next_tick,
                 )
-            next_tick += (ticks_passed + 1) * self._config.tick_size
 
-        self._current_tick = actual_time
-        return next_tick
+        # Set current tick to aligned boundary (consistent with initialization)
+        self._current_tick = (
+            actual_time // self._config.tick_size
+        ) * self._config.tick_size
