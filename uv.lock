@@ -31,7 +31,7 @@ wheels = [
 
 [[package]]
 name = "chronopype"
-version = "0.8.1"
+version = "0.8.3"
 source = { editable = "." }
 dependencies = [
     { name = "eventspype" },
@@ -55,7 +55,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "eventspype", specifier = ">=1.1.0,<2" },
-    { name = "pydantic", specifier = ">=2.10.4,<3" },
+    { name = "pydantic", specifier = ">=2.12,<3" },
 ]
 
 [package.metadata.requires-dev]
