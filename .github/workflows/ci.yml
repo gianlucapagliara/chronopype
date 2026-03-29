@@ -55,7 +55,7 @@ jobs:
       run: uv run pytest tests/ --cov=chronopype --cov-report=xml --cov-fail-under=80
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: gianlucapagliara/chronopype
